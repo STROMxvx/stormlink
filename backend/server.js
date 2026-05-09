@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 
 const app = express();
-const server = http.createServer(app);а
+const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
 app.use(express.json());
@@ -135,4 +135,6 @@ io.on('connection', (socket) => {
     socket.on('disconnect', () => console.log('Пользователь отключился'));
 });
 
-server.listen(3000, () => console.log('Сервер запущен на http://localhost:3000'));
+// Используем порт из окружения или 3000
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => console.log(`Сервер запущен на порту ${PORT}`));
