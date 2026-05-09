@@ -41,6 +41,7 @@
             background: rgba(0,255,255,0.1);
             border-radius: 40px;
             cursor: pointer;
+            flex-wrap: wrap;
         }
         .user-info:hover { background: rgba(0,255,255,0.2); }
         .avatar {
@@ -165,13 +166,32 @@
             position: relative;
         }
         .message {
-            max-width: 60%;
+            max-width: 70%;
             background: rgba(0,255,255,0.1);
             border-radius: 20px;
             padding: 8px 14px;
             word-wrap: break-word;
             transition: 0.2s;
             position: relative;
+            display: flex;
+            gap: 10px;
+            align-items: flex-start;
+        }
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: #0af;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+            background-size: cover;
+            background-position: center;
+        }
+        .message-content {
+            flex: 1;
         }
         .message:hover .msg-actions { display: flex; }
         .msg-actions {
@@ -422,6 +442,12 @@
         };
     }
 
+    function getAvatarForUser(login) {
+        const avatar = userAvatars[login];
+        if (avatar) return `<div class="message-avatar" style="background-image:url(${avatar}); background-size:cover;"></div>`;
+        return `<div class="message-avatar">⚡</div>`;
+    }
+
     function addMessageActions() {
         document.querySelectorAll('.msg-actions').forEach(el => el.remove());
         const messages = document.querySelectorAll('.message');
@@ -477,10 +503,14 @@
             return;
         }
         container.innerHTML = msgs.map((msg, idx) => {
+            const avatarHtml = getAvatarForUser(msg.from);
             return `
                 <div class="message ${msg.from === currentUser ? 'my-message' : ''}" data-msg-idx="${idx}">
-                    <strong>${msg.from}:</strong> ${msg.text}<br>
-                    <small>${msg.time}</small>
+                    ${avatarHtml}
+                    <div class="message-content">
+                        <strong>${msg.from}:</strong> ${msg.text}<br>
+                        <small>${msg.time}</small>
+                    </div>
                 </div>
             `;
         }).join('');
@@ -501,7 +531,7 @@
                 <div><strong>📝 О себе:</strong> ${currentUserData?.about || 'не указано'}</div>
                 <div><strong>📅 Дата рождения:</strong> ${currentUserData?.birthdate || 'не указана'}</div>
                 <button id="editProfileBtn">✏️ Редактировать</button>
-                <button class="change-login-btn" id="changeLoginBtnFromProfile">✏️ Сменить логин</button>
+                <button id="changeLoginBtnFromProfile">✏️ Сменить логин</button>
                 <button id="closeProfileBtn">Закрыть</button>
             </div>
         `;
