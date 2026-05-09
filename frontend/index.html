@@ -16,9 +16,10 @@
             color: white;
             overflow: hidden;
         }
+        /* Общие стили */
         .messenger {
             width: 100%;
-            max-width: 1300px;
+            max-width: 1400px;
             height: 100vh;
             display: flex;
             background: rgba(6,12,24,0.7);
@@ -26,19 +27,41 @@
             position: relative;
             overflow: hidden;
         }
+        /* ПК-стили (по умолчанию) */
         .sidebar {
-            width: 280px;
+            width: 300px;
             background: rgba(2,8,18,0.9);
-            backdrop-filter: blur(12px);
             border-right: 1px solid rgba(0,255,255,0.3);
             display: flex;
             flex-direction: column;
             padding: 16px;
             gap: 16px;
             overflow-y: auto;
-            transition: transform 0.2s ease;
-            z-index: 20;
+            transition: all 0.3s;
         }
+        .sidebar.collapsed {
+            width: 70px;
+        }
+        .sidebar.collapsed .user-info div:not(.avatar),
+        .sidebar.collapsed .chat-info span:last-child,
+        .sidebar.collapsed .add-btn span {
+            display: none;
+        }
+        .sidebar.collapsed .chat-info {
+            justify-content: center;
+        }
+        .mode-toggle {
+            background: rgba(0,255,255,0.2);
+            border: 1px solid #0af;
+            border-radius: 40px;
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 8px;
+        }
+        .mode-toggle:hover { background: rgba(0,255,255,0.4); }
+        /* Мобильные стили (по умолчанию скрыты, включаются медиа-запросом или кнопкой) */
         @media (max-width: 768px) {
             .sidebar {
                 position: absolute;
@@ -46,10 +69,8 @@
                 top: 0;
                 bottom: 0;
                 transform: translateX(-100%);
-                width: 70%;
-                max-width: 280px;
-                background: rgba(2,8,18,0.95);
-                border-right: 1px solid cyan;
+                width: 280px;
+                z-index: 1000;
             }
             .sidebar.open { transform: translateX(0); }
             .burger-btn {
@@ -68,7 +89,9 @@
                 color: black;
             }
         }
-        @media (min-width: 769px) { .burger-btn { display: none; } }
+        @media (min-width: 769px) {
+            .burger-btn { display: none; }
+        }
         .user-info {
             display: flex;
             align-items: center;
@@ -90,21 +113,7 @@
             font-size: 24px;
             background-size: cover;
             background-position: center;
-        }
-        .friends-icon {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            background: #0af;
-            border: none;
-            border-radius: 50%;
-            width: 55px;
-            height: 55px;
-            font-size: 28px;
-            cursor: pointer;
-            color: black;
-            z-index: 25;
-            box-shadow: 0 0 15px cyan;
+            flex-shrink: 0;
         }
         .search-player {
             background: rgba(0,255,255,0.05);
@@ -197,7 +206,7 @@
             gap: 8px;
         }
         .message {
-            max-width: 80%;
+            max-width: 70%;
             background: rgba(0,255,255,0.1);
             border-radius: 20px;
             padding: 8px 12px;
@@ -248,13 +257,13 @@
         }
         .chat-input input {
             flex: 1;
-            padding: 10px;
+            padding: 12px;
             background: #010a1a;
             border: 1px solid #0af;
             border-radius: 40px;
             color: white;
             outline: none;
-            font-size: 14px;
+            font-size: 16px;
         }
         .chat-input button {
             background: none;
@@ -262,7 +271,7 @@
             font-size: 24px;
             cursor: pointer;
             color: #0af;
-            padding: 0 6px;
+            padding: 0 12px;
         }
         .reply-indicator {
             font-size: 12px;
@@ -338,6 +347,14 @@
         }
         .emoji-option { cursor: pointer; padding: 4px 8px; border-radius: 12px; }
         .emoji-option:hover { background: #0af; }
+        .icon-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 20px;
+            color: cyan;
+            margin-left: 8px;
+        }
     </style>
 </head>
 <body>
@@ -357,6 +374,7 @@
     let subgroups = JSON.parse(localStorage.getItem('subgroups') || '{}');
     let friends = JSON.parse(localStorage.getItem('friends') || '{}');
     let replyTo = null;
+    let isMobileMode = false;
 
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
@@ -457,6 +475,7 @@
                     currentChatName = login;
                     document.getElementById('chatTitle').innerText = login;
                     renderMessages();
+                    socket.emit('join', currentChat);
                     modal.remove();
                 };
                 modal.querySelector('#closeBtn').onclick = () => modal.remove();
@@ -741,6 +760,36 @@
         modal.querySelector('#cancelCreate').onclick = () => modal.remove();
     }
 
+    function toggleMode() {
+        const sidebar = document.querySelector('.sidebar');
+        const modeBtn = document.getElementById('modeToggleBtn');
+        if (window.innerWidth <= 768) {
+            // На телефоне: переключаем между мобильным и "как на ПК"
+            isMobileMode = !isMobileMode;
+            if (isMobileMode) {
+                sidebar.classList.remove('open');
+                sidebar.style.transform = 'translateX(-100%)';
+                modeBtn.innerHTML = '🖥️';
+            } else {
+                sidebar.style.transform = 'translateX(0)';
+                modeBtn.innerHTML = '📱';
+            }
+        } else {
+            // На ПК: сворачиваем/разворачиваем боковую панель
+            sidebar.classList.toggle('collapsed');
+            modeBtn.innerHTML = sidebar.classList.contains('collapsed') ? '☰' : '📱';
+        }
+        // Обновляем иконку рядом с тремя точками
+        const modeIcon = document.getElementById('modeIcon');
+        if (modeIcon) {
+            if (window.innerWidth <= 768) {
+                modeIcon.innerHTML = isMobileMode ? '🖥️' : '📱';
+            } else {
+                modeIcon.innerHTML = sidebar.classList.contains('collapsed') ? '📱' : '🖥️';
+            }
+        }
+    }
+
     function showChatMenu() {
         const menu = document.createElement('div');
         menu.className = 'chat-menu';
@@ -777,7 +826,7 @@
             delete subgroups[chatId];
             saveSubgroups();
             renderChats();
-            if (currentChat === chatId) { currentChat = 'favorites'; currentChatName = 'Избранное'; document.getElementById('chatTitle').innerText = 'Избранное'; renderMessages(); }
+            if (currentChat === chatId) { currentChat = 'favorites'; currentChatName = 'Избранное'; document.getElementById('chatTitle').innerText = 'Избранное'; renderMessages(); socket.emit('join', currentChat); }
         }
     }
 
@@ -805,6 +854,7 @@
                         <div id="userAvatar" class="avatar">⚡</div>
                         <div><strong>${currentUser}</strong></div>
                     </div>
+                    <div class="mode-toggle" id="modeToggleBtn" onclick="toggleMode()">📱</div>
                     <div class="search-player">
                         <input type="text" id="searchPlayerInput" placeholder="Поиск игрока...">
                         <button id="searchPlayerBtn">🔍</button>
@@ -816,7 +866,10 @@
                 <div class="chat-area">
                     <div class="chat-header">
                         <span class="chat-title" id="chatTitle">${currentChatName}</span>
-                        <button class="chat-header-dots" id="headerDotsBtn">⋯</button>
+                        <div style="display: flex; align-items: center;">
+                            <button class="icon-btn" id="modeIconBtn" onclick="toggleMode()" style="margin-right: 8px;">${window.innerWidth <= 768 ? '🖥️' : '📱'}</button>
+                            <button class="chat-header-dots" id="headerDotsBtn">⋯</button>
+                        </div>
                     </div>
                     <div class="chat-messages" id="messagesList"></div>
                     <div id="replyIndicator" style="padding:0 16px; font-size:12px; opacity:0.7;"></div>
@@ -856,6 +909,11 @@
         document.getElementById('chatTitle').onclick = () => alert(`Профиль чата: ${currentChatName}`);
         document.getElementById('burgerBtn').onclick = () => document.getElementById('sidebar').classList.toggle('open');
         document.getElementById('friendsIcon').onclick = showFriendsList;
+        if (window.innerWidth <= 768) {
+            document.getElementById('modeToggleBtn').innerHTML = '📱';
+        } else {
+            document.getElementById('modeToggleBtn').innerHTML = '🖥️';
+        }
         socket.emit('join', currentChat);
     }
 
