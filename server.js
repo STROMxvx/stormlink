@@ -2,13 +2,19 @@ const express = require('express');
 const http = require('http');
 const socketIo = require('socket.io');
 const bcrypt = require('bcryptjs');
+const path = require('path');
 
 const app = express();
 const server = http.createServer(app);
 const io = socketIo(server, { cors: { origin: "*" } });
 
 app.use(express.json());
-app.use(express.static('../frontend'));
+app.use(express.static(path.join(__dirname, '../frontend')));
+
+// Обработка корневого пути
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, '../frontend/index.html'));
+});
 
 let users = {};
 let messages = {};
