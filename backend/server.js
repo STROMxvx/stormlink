@@ -5,7 +5,7 @@ const bcrypt = require('bcryptjs');
 const path = require('path');
 
 const app = express();
-const server = http.createServer(app);
+const server = http.createServer(app);а
 const io = socketIo(server, { cors: { origin: "*" } });
 
 app.use(express.json());
