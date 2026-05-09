@@ -122,17 +122,18 @@ app.post('/chat-info', (req, res) => {
     }
 });
 
-// ========== НОВЫЕ МАРШРУТЫ ==========
+// ========== НОВЫЙ МАРШРУТ СМЕНЫ ЛОГИНА ==========
 app.post('/change-login', async (req, res) => {
     const { oldLogin, newLogin } = req.body;
     if (!users[oldLogin]) return res.json({ error: 'Пользователь не найден' });
     if (users[newLogin]) return res.json({ error: 'Логин уже занят' });
+    
     users[newLogin] = { ...users[oldLogin] };
     delete users[oldLogin];
+    
     for (let chatId in messages) {
         messages[chatId] = messages[chatId].map(msg => {
             if (msg.from === oldLogin) msg.from = newLogin;
-            if (msg.replyTo && msg.replyTo.from === oldLogin) msg.replyTo.from = newLogin;
             return msg;
         });
     }
@@ -142,18 +143,22 @@ app.post('/change-login', async (req, res) => {
 io.on('connection', (socket) => {
     console.log('Пользователь подключился');
     socket.on('join', (chatId) => { socket.join(chatId); });
-    socket.on('sendMessage', ({ chatId, from, text, replyTo, time }) => {
-        const msg = { from, text, time: time || new Date().toLocaleTimeString(), replyTo };
+    
+    socket.on('sendMessage', ({ chatId, from, text }) => {
+        const msg = { from, text, time: new Date().toLocaleTimeString() };
         if (!messages[chatId]) messages[chatId] = [];
         messages[chatId].push(msg);
         io.to(chatId).emit('newMessage', msg);
     });
+    
+    // ========== НОВЫЙ ОБРАБОТЧИК УДАЛЕНИЯ ==========
     socket.on('deleteMessage', ({ chatId, messageIndex }) => {
         if (messages[chatId] && messages[chatId][messageIndex]) {
             messages[chatId].splice(messageIndex, 1);
             io.to(chatId).emit('messageDeleted', { chatId, messageIndex });
         }
     });
+    
     socket.on('disconnect', () => console.log('Пользователь отключился'));
 });
 
