@@ -30,7 +30,7 @@
             backdrop-filter: blur(20px);
         }
 
-        /* Sidebar — ПК-версия */
+        /* ПК-версия (по умолчанию) */
         .sidebar {
             width: 300px;
             background: rgba(2,8,18,0.9);
@@ -40,6 +40,45 @@
             padding: 16px;
             gap: 16px;
             overflow-y: auto;
+            transition: all 0.3s;
+        }
+
+        /* Мобильный режим (когда окно узкое или включена мобильная версия) */
+        .mobile-mode .sidebar {
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 280px;
+            transform: translateX(-100%);
+            z-index: 1000;
+            border-radius: 0;
+        }
+        .mobile-mode .sidebar.open {
+            transform: translateX(0);
+        }
+        .mobile-mode .burger-btn {
+            display: block;
+            position: fixed;
+            top: 15px;
+            left: 15px;
+            z-index: 1001;
+            background: #0af;
+            border: none;
+            border-radius: 50%;
+            width: 45px;
+            height: 45px;
+            font-size: 24px;
+            cursor: pointer;
+            color: black;
+        }
+        .mobile-mode .messenger {
+            border-radius: 0;
+        }
+
+        /* ПК-режим: бургер скрыт */
+        .burger-btn {
+            display: none;
         }
 
         .user-info {
@@ -52,7 +91,6 @@
             cursor: pointer;
         }
         .user-info:hover { background: rgba(0,255,255,0.2); }
-
         .avatar {
             width: 48px;
             height: 48px;
@@ -65,7 +103,6 @@
             background-size: cover;
             background-position: center;
         }
-
         .search-player {
             background: rgba(0,255,255,0.05);
             border: 1px solid #0af;
@@ -88,7 +125,6 @@
             padding: 4px 12px;
             cursor: pointer;
         }
-
         .chats-list {
             flex: 1;
             display: flex;
@@ -96,7 +132,6 @@
             gap: 8px;
             overflow-y: auto;
         }
-
         .chat-item {
             padding: 10px;
             border-radius: 20px;
@@ -113,7 +148,6 @@
             align-items: center;
             flex: 1;
         }
-
         .subgroup-item {
             margin-left: 28px;
             padding: 6px;
@@ -124,7 +158,6 @@
             width: calc(100% - 28px);
         }
         .subgroup-item:hover { background: rgba(0,255,255,0.15); }
-
         .add-btn {
             background: rgba(0,200,255,0.2);
             border: 1px solid #0af;
@@ -133,14 +166,12 @@
             text-align: center;
             cursor: pointer;
         }
-
         .chat-area {
             flex: 1;
             display: flex;
             flex-direction: column;
             background: rgba(6,12,24,0.4);
         }
-
         .chat-header {
             padding: 16px 20px;
             border-bottom: 1px solid #0af;
@@ -149,13 +180,11 @@
             align-items: center;
             background: rgba(2,8,18,0.7);
         }
-
         .chat-title {
             font-size: 20px;
             font-weight: bold;
             cursor: pointer;
         }
-
         .chat-messages {
             flex: 1;
             padding: 20px;
@@ -164,7 +193,6 @@
             flex-direction: column;
             gap: 8px;
         }
-
         .message {
             max-width: 60%;
             background: rgba(0,255,255,0.1);
@@ -176,7 +204,6 @@
             gap: 10px;
             align-items: flex-start;
         }
-
         .message-avatar {
             width: 36px;
             height: 36px;
@@ -190,15 +217,12 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-
         .message-content { flex: 1; }
-
         .my-message {
             align-self: flex-end;
             background: #0af;
             color: black;
         }
-
         .message-actions {
             display: none;
             gap: 12px;
@@ -215,7 +239,6 @@
             border-radius: 16px;
         }
         .message-actions span:hover { opacity: 1; background: cyan; color: black; }
-
         .chat-input {
             display: flex;
             padding: 16px;
@@ -244,7 +267,6 @@
             transition: 0.2s;
         }
         .chat-input button:hover { transform: scale(1.1); }
-
         .reply-indicator {
             font-size: 12px;
             opacity: 0.7;
@@ -252,7 +274,6 @@
             border-left: 2px solid cyan;
             padding-left: 8px;
         }
-
         .auth-box {
             background: rgba(6,12,24,0.95);
             border: 2px solid #0af;
@@ -280,7 +301,6 @@
             cursor: pointer;
         }
         .auth-buttons { display: flex; gap: 10px; margin: 20px 0; }
-
         .modal {
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
@@ -297,7 +317,6 @@
         }
         .modal-buttons { display:flex; gap:12px; margin-top:16px; }
         .modal-buttons button { flex:1; padding:8px; background:#0af; border:none; border-radius:40px; cursor:pointer; }
-
         .profile-card {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #0c1322; border: 2px solid #0af; border-radius: 28px;
@@ -305,7 +324,6 @@
             max-height: 80vh; overflow-y: auto;
         }
         .profile-card button { margin-top: 12px; padding: 8px 16px; background: #0af; border: none; border-radius: 40px; cursor: pointer; }
-
         .friends-list {
             position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
             background: #0c1322; border: 2px solid #0af; border-radius: 28px;
@@ -317,14 +335,12 @@
             border-radius: 20px; background: rgba(0,255,255,0.05); margin-bottom: 8px; cursor: pointer;
         }
         .friend-item:hover { background: rgba(0,255,255,0.2); }
-
         .emoji-picker {
             display: flex; gap: 8px; flex-wrap: wrap;
             justify-content: center; margin: 12px 0; font-size: 28px;
         }
         .emoji-option { cursor: pointer; padding: 4px 8px; border-radius: 12px; }
         .emoji-option:hover { background: #0af; }
-
         .friends-icon {
             position: fixed;
             bottom: 20px;
@@ -340,7 +356,6 @@
             z-index: 25;
             box-shadow: 0 0 15px cyan;
         }
-
         .icon-btn {
             background: none;
             border: none;
@@ -348,6 +363,24 @@
             font-size: 24px;
             color: cyan;
             margin-right: 8px;
+        }
+        /* Автоматическое переключение при узком окне */
+        @media (max-width: 768px) {
+            body.mobile-auto .sidebar {
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 280px;
+                transform: translateX(-100%);
+                z-index: 1000;
+            }
+            body.mobile-auto .sidebar.open {
+                transform: translateX(0);
+            }
+            body.mobile-auto .burger-btn {
+                display: block;
+            }
         }
     </style>
 </head>
@@ -368,6 +401,7 @@
     let subgroups = JSON.parse(localStorage.getItem('subgroups') || '{}');
     let friends = JSON.parse(localStorage.getItem('friends') || '{}');
     let replyTo = null;
+    let isMobileMode = false;
 
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
@@ -378,6 +412,29 @@
     function getFormattedTime() {
         const now = new Date();
         return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}, ${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
+    }
+
+    function toggleMobileMode() {
+        const body = document.body;
+        isMobileMode = !isMobileMode;
+        if (isMobileMode) {
+            body.classList.add('mobile-mode');
+            body.classList.remove('mobile-auto');
+            document.getElementById('modeToggleBtn').innerHTML = '🖥️';
+        } else {
+            body.classList.remove('mobile-mode');
+            body.classList.add('mobile-auto');
+            document.getElementById('modeToggleBtn').innerHTML = '📱';
+            // Закрываем сайдбар при выходе из мобильного режима
+            const sidebar = document.querySelector('.sidebar');
+            if (sidebar) sidebar.classList.remove('open');
+        }
+        localStorage.setItem('mobileMode', isMobileMode);
+    }
+
+    function toggleSidebar() {
+        const sidebar = document.querySelector('.sidebar');
+        if (sidebar) sidebar.classList.toggle('open');
     }
 
     async function renderAuth() {
@@ -611,7 +668,7 @@
             const updatedData = { name: modal.querySelector('#editName').value, surname: modal.querySelector('#editSurname').value, birthdate: modal.querySelector('#editBirthdate').value, about: modal.querySelector('#editAbout').value };
             currentUserData = { ...currentUserData, ...updatedData };
             await fetch('/update-profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: currentUser, ...updatedData }) });
-            alert('Профиль обновлён');
+            alert('Профиль обновлен');
             modal.remove();
         };
         modal.querySelector('#cancelEditBtn').onclick = () => modal.remove();
@@ -811,8 +868,9 @@
             if (messagesData[chatId]) { messagesData[chatId].splice(messageIndex, 1); if (chatId === currentChat) renderMessages(); }
         });
         document.getElementById('app').innerHTML = `
+            <button class="burger-btn" id="burgerBtn">☰</button>
             <div class="messenger">
-                <div class="sidebar">
+                <div class="sidebar" id="sidebar">
                     <div class="user-info" id="profileBtn">
                         <div id="userAvatar" class="avatar">⚡</div>
                         <div><strong>${currentUser}</strong></div>
@@ -829,7 +887,7 @@
                     <div class="chat-header">
                         <span class="chat-title" id="chatTitle">${currentChatName}</span>
                         <div>
-                            <button class="icon-btn" id="mobileIconBtn" onclick="alert('Мобильная версия в разработке')">📱</button>
+                            <button class="icon-btn" id="modeToggleBtn" onclick="toggleMobileMode()">📱</button>
                             <button class="chat-header-dots" id="headerDotsBtn">⋯</button>
                         </div>
                     </div>
@@ -848,19 +906,25 @@
         if (userAvatars[currentUser]) {
             const avatarDiv = document.getElementById('userAvatar');
             avatarDiv.style.backgroundImage = `url(${userAvatars[currentUser]})`;
-            avatarDiv.style.backgroundSize = 'cover'; avatarDiv.innerHTML = '';
+            avatarDiv.style.backgroundSize = 'cover';
+            avatarDiv.innerHTML = '';
         }
-        renderChats(); renderMessages();
+        renderChats();
+        renderMessages();
         document.getElementById('sendBtn').onclick = () => {
             const input = document.getElementById('msgInput');
             let text = input.value.trim();
             if (replyTo) {
                 text = `↩️ Ответ ${replyTo.from}: "${replyTo.text.substring(0,40)}"\n${text}`;
-                replyTo = null; document.getElementById('replyIndicator').innerText = '';
+                replyTo = null;
+                document.getElementById('replyIndicator').innerText = '';
             }
-            if (text) { socket.emit('sendMessage', { chatId: currentChat, from: currentUser, text, time: getFormattedTime() }); input.value = ''; }
+            if (text) {
+                socket.emit('sendMessage', { chatId: currentChat, from: currentUser, text, time: getFormattedTime() });
+                input.value = '';
+            }
         };
-        document.getElementById('msgInput').addEventListener('input', (e) => { console.log('Ввод:', e.target.value); });
+        document.getElementById('msgInput').addEventListener('input', (e) => {});
         document.getElementById('msgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') { e.preventDefault(); document.getElementById('sendBtn').click(); } });
         document.getElementById('profileBtn').onclick = showProfile;
         document.getElementById('createGroupBtn').onclick = showCreateGroupModal;
@@ -872,6 +936,22 @@
         document.getElementById('chatSearchInput').oninput = () => filterChats();
         document.getElementById('chatTitle').onclick = () => alert(`Профиль чата: ${currentChatName}`);
         document.getElementById('friendsIcon').onclick = showFriendsList;
+        document.getElementById('burgerBtn').onclick = () => {
+            const sidebar = document.getElementById('sidebar');
+            if (sidebar) sidebar.classList.toggle('open');
+        };
+        // Восстанавливаем сохранённый режим
+        const savedMode = localStorage.getItem('mobileMode');
+        if (savedMode === 'true') {
+            isMobileMode = true;
+            document.body.classList.add('mobile-mode');
+            document.body.classList.remove('mobile-auto');
+            document.getElementById('modeToggleBtn').innerHTML = '🖥️';
+        } else if (window.innerWidth <= 768) {
+            document.body.classList.add('mobile-auto');
+        } else {
+            document.body.classList.add('mobile-auto');
+        }
         socket.emit('join', currentChat);
     }
 
