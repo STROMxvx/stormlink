@@ -21,17 +21,13 @@ let globalChats = [
     { id: 'favorites', name: 'Избранное', avatar: '⭐', theme: 'личное', members: [] }
 ];
 
-// Регистрация (логин только латиница + цифры + _+-~)
 app.post('/register', async (req, res) => {
     const { login, password, name, surname, birthdate, about, favoriteGames } = req.body;
     if (users[login]) return res.json({ error: 'Логин занят' });
-    if (!/^[a-zA-Z0-9_+\-~]+$/.test(login) || login.length < 3 || login.length > 20) {
-        return res.json({ error: 'Логин: 3-20 символов, латиница, цифры, _+-~' });
-    }
     users[login] = {
         password: await bcrypt.hash(password, 10),
-        name: login,
-        surname: '',
+        name: name || '',
+        surname: surname || '',
         birthdate: birthdate || '',
         about: about || '',
         favoriteGames: favoriteGames || [],
@@ -106,11 +102,20 @@ app.post('/add-member', (req, res) => {
 app.get('/chats', (req, res) => res.json(globalChats));
 app.get('/messages/:chatId', (req, res) => res.json(messages[req.params.chatId] || []));
 
+// ========== ГЛАВНЫЙ ПОИСК ПОЛЬЗОВАТЕЛЯ ==========
 app.post('/search-user', (req, res) => {
     const { login } = req.body;
+    console.log('Поиск пользователя:', login);
     const user = users[login];
     if (user) {
-        res.json({ found: true, login: login, name: user.name, surname: user.surname, birthdate: user.birthdate, about: user.about });
+        res.json({ 
+            found: true, 
+            login: login, 
+            name: user.name, 
+            surname: user.surname, 
+            birthdate: user.birthdate, 
+            about: user.about 
+        });
     } else {
         res.json({ found: false });
     }
@@ -126,14 +131,11 @@ app.post('/chat-info', (req, res) => {
     }
 });
 
-// Смена логина (с проверкой)
+// Смена логина
 app.post('/change-login', async (req, res) => {
     const { oldLogin, newLogin } = req.body;
     if (!users[oldLogin]) return res.json({ error: 'Пользователь не найден' });
     if (users[newLogin]) return res.json({ error: 'Логин уже занят' });
-    if (!/^[a-zA-Z0-9_+\-~]+$/.test(newLogin) || newLogin.length < 3 || newLogin.length > 20) {
-        return res.json({ error: 'Новый логин: 3-20 символов, латиница, цифры, _+-~' });
-    }
     users[newLogin] = { ...users[oldLogin] };
     delete users[oldLogin];
     for (let chatId in messages) {
