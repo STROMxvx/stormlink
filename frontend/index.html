@@ -888,10 +888,21 @@
             if (!name) { showToast('Введите название'); return; }
             if (!login) { showToast('Введите логин группы'); return; }
             if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
-            groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] });
+            const newGroup = { 
+                id: Date.now(), 
+                login, 
+                name, 
+                avatar: selectedEmoji, 
+                theme, 
+                creator: currentUser, 
+                members: [currentUser] 
+            };
+            groups.push(newGroup);
             saveGroups();
-            showToast(`Группа "${name}" создана`);
+            // Добавляем в список чатов создателя
+            allChats.push({ id: newGroup.id, name: newGroup.name, avatar: newGroup.avatar, isGroup: true, creator: currentUser });
             renderChats();
+            showToast(`Группа "${name}" создана`);
             modal.remove();
         };
         modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
@@ -925,10 +936,21 @@
             if (!name) { showToast('Введите название'); return; }
             if (!login) { showToast('Введите логин канала'); return; }
             if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
-            channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] });
+            const newChannel = { 
+                id: Date.now(), 
+                login, 
+                name, 
+                avatar: selectedEmoji, 
+                theme, 
+                creator: currentUser, 
+                members: [] 
+            };
+            channels.push(newChannel);
             saveChannels();
-            showToast(`Канал "${name}" создан`);
+            // Добавляем в список чатов создателя
+            allChats.push({ id: newChannel.id, name: newChannel.name, avatar: newChannel.avatar, isChannel: true, creator: currentUser });
             renderChats();
+            showToast(`Канал "${name}" создан`);
             modal.remove();
         };
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
@@ -944,13 +966,12 @@
         if (existingTemp) existingTemp.remove();
         
         if (!query) {
-            // Показываем все чаты
             const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
             items.forEach(item => item.style.display = 'flex');
             return;
         }
         
-        // Сначала фильтруем существующие чаты по названию
+        // Фильтруем существующие чаты по названию
         const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
@@ -961,7 +982,7 @@
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
             .then(r => r.json())
             .then(data => {
-                if (data.found) {
+                if (data.found && data.login !== currentUser) {
                     const userDiv = document.createElement('div');
                     userDiv.id = 'temp-search-result';
                     userDiv.className = 'chat-item search-result-item';
@@ -987,8 +1008,9 @@
                     if (confirm(`Вступить в группу "${foundGroup.name}"?`)) {
                         foundGroup.members.push(currentUser);
                         saveGroups();
-                        showToast(`Вы вступили в группу ${foundGroup.name}`);
+                        allChats.push({ id: foundGroup.id, name: foundGroup.name, avatar: foundGroup.avatar, isGroup: true, creator: foundGroup.creator });
                         renderChats();
+                        showToast(`Вы вступили в группу ${foundGroup.name}`);
                     }
                 } else {
                     showGroupProfile(foundGroup);
@@ -1011,8 +1033,9 @@
                     if (confirm(`Подписаться на канал "${foundChannel.name}"?`)) {
                         foundChannel.members.push(currentUser);
                         saveChannels();
-                        showToast(`Вы подписались на канал ${foundChannel.name}`);
+                        allChats.push({ id: foundChannel.id, name: foundChannel.name, avatar: foundChannel.avatar, isChannel: true, creator: foundChannel.creator });
                         renderChats();
+                        showToast(`Вы подписались на канал ${foundChannel.name}`);
                     }
                 } else {
                     showChannelProfile(foundChannel);
@@ -1078,8 +1101,16 @@
         let chats = await res.json();
         allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
         if (!allChats.find(c => c.id === 'favorites')) allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true });
-        groups.forEach(g => { if (g.members.includes(currentUser)) allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true, creator: g.creator }); });
-        channels.forEach(c => { if (c.members.includes(currentUser)) allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true, creator: c.creator }); });
+        groups.forEach(g => { 
+            if (g.members.includes(currentUser) && !allChats.some(c => c.id === g.id)) {
+                allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true, creator: g.creator });
+            }
+        });
+        channels.forEach(c => { 
+            if (c.members.includes(currentUser) && !allChats.some(ch => ch.id === c.id)) {
+                allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true, creator: c.creator });
+            }
+        });
     }
 
     function renderChats() {
@@ -1261,12 +1292,10 @@
         document.getElementById('voiceBtn').onclick = startVoiceRecording;
         document.getElementById('cancelVoiceBtn').onclick = cancelVoiceRecording;
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerText = ''; document.getElementById('cancelReplyBtn').style.display = 'none'; };
-        document.getElementById('searchBtn').onclick = performSearch;
+        document.getElementById('searchBtn').onclick = () => performSearch();
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             if (e.key === 'Enter') performSearch();
-            else {
-                if (e.target.value === '') performSearch();
-            }
+            else if (e.target.value === '') performSearch();
         });
         document.getElementById('friendsIcon').onclick = showFriendsList;
         document.getElementById('burgerBtn').onclick = () => { document.getElementById('sidebar').classList.toggle('open'); };
