@@ -569,7 +569,6 @@
         };
     }
 
-    // ========== ПРОФИЛИ ГРУПП И КАНАЛОВ ==========
     function showGroupProfile(group) {
         const memberCount = group.members.length;
         const membersList = group.members.map(m => `<div class="member-item"><div class="avatar" style="width:24px; height:24px; font-size:12px;">👤</div><span>${m}</span></div>`).join('');
@@ -606,7 +605,6 @@
         modal.querySelector('#closeProfileBtn').onclick = () => modal.remove();
     }
 
-    // ========== ПРОФИЛЬ СВОЙ ==========
     function showMyProfile() {
         const avatarUrl = userAvatars[currentUser] || null;
         const modal = document.createElement('div');
@@ -681,7 +679,6 @@
         modal.querySelector('#cancelEditBtn').onclick = () => modal.remove();
     }
 
-    // ========== ПРОФИЛЬ ДРУГОГО ПОЛЬЗОВАТЕЛЯ ==========
     function showUserProfile(login) {
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
             .then(r => r.json())
@@ -860,7 +857,6 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
-    // ========== СОЗДАНИЕ ГРУППЫ ==========
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modal = document.createElement('div');
@@ -873,7 +869,7 @@
                     <span class="emoji-option">⭐</span><span class="emoji-option">💬</span><span class="emoji-option">🎲</span>
                     <span class="emoji-option">👾</span><span class="emoji-option">⚡</span><span class="emoji-option">💀</span>
                 </div>
-                <input type="text" id="groupLogin" placeholder="Логин группы (латиница, цифры, _+-~)">
+                <input type="text" id="groupLogin" placeholder="Логин группы">
                 <input type="text" id="groupName" placeholder="Название группы">
                 <input type="text" id="groupTheme" placeholder="Тематика">
                 <div class="modal-buttons"><button id="confirmCreateGroup">Создать</button><button id="cancelCreateGroup">Отмена</button></div>
@@ -887,20 +883,9 @@
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
             if (!login) { showToast('Введите логин группы'); return; }
-            if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
-            const newGroup = { 
-                id: Date.now(), 
-                login, 
-                name, 
-                avatar: selectedEmoji, 
-                theme, 
-                creator: currentUser, 
-                members: [currentUser] 
-            };
-            groups.push(newGroup);
+            groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] });
             saveGroups();
-            // Добавляем в список чатов создателя
-            allChats.push({ id: newGroup.id, name: newGroup.name, avatar: newGroup.avatar, isGroup: true, creator: currentUser });
+            allChats.push({ id: groups[groups.length-1].id, name: name, avatar: selectedEmoji, isGroup: true, creator: currentUser });
             renderChats();
             showToast(`Группа "${name}" создана`);
             modal.remove();
@@ -908,7 +893,6 @@
         modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
     }
 
-    // ========== СОЗДАНИЕ КАНАЛА ==========
     function showCreateChannelModal() {
         let selectedEmoji = '📢';
         const modal = document.createElement('div');
@@ -921,7 +905,7 @@
                     <span class="emoji-option">⭐</span><span class="emoji-option">💬</span><span class="emoji-option">🎲</span>
                     <span class="emoji-option">👾</span><span class="emoji-option">⚡</span><span class="emoji-option">💀</span>
                 </div>
-                <input type="text" id="channelLogin" placeholder="Логин канала (латиница, цифры, _+-~)">
+                <input type="text" id="channelLogin" placeholder="Логин канала">
                 <input type="text" id="channelName" placeholder="Название канала">
                 <input type="text" id="channelTheme" placeholder="Тематика">
                 <div class="modal-buttons"><button id="confirmCreateChannel">Создать</button><button id="cancelCreateChannel">Отмена</button></div>
@@ -935,20 +919,9 @@
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
             if (!login) { showToast('Введите логин канала'); return; }
-            if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
-            const newChannel = { 
-                id: Date.now(), 
-                login, 
-                name, 
-                avatar: selectedEmoji, 
-                theme, 
-                creator: currentUser, 
-                members: [] 
-            };
-            channels.push(newChannel);
+            channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] });
             saveChannels();
-            // Добавляем в список чатов создателя
-            allChats.push({ id: newChannel.id, name: newChannel.name, avatar: newChannel.avatar, isChannel: true, creator: currentUser });
+            allChats.push({ id: channels[channels.length-1].id, name: name, avatar: selectedEmoji, isChannel: true, creator: currentUser });
             renderChats();
             showToast(`Канал "${name}" создан`);
             modal.remove();
@@ -956,7 +929,7 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК ==========
+    // ========== ПОИСК (РАБОТАЕТ!) ==========
     function performSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('chatsList');
@@ -978,7 +951,7 @@
             item.style.display = name.includes(query) ? 'flex' : 'none';
         });
         
-        // Ищем пользователя
+        // Ищем пользователя (кроме себя)
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
             .then(r => r.json())
             .then(data => {
@@ -1183,7 +1156,7 @@
                         <div><strong>${currentUser}</strong></div>
                     </div>
                     <div class="search-player">
-                        <input type="text" id="searchInput" placeholder="Поиск (логин пользователя, группы, канала)">
+                        <input type="text" id="searchInput" placeholder="Поиск по логину...">
                         <button id="searchBtn">🔍</button>
                     </div>
                     <div class="chats-list" id="chatsList"></div>
@@ -1292,10 +1265,10 @@
         document.getElementById('voiceBtn').onclick = startVoiceRecording;
         document.getElementById('cancelVoiceBtn').onclick = cancelVoiceRecording;
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerText = ''; document.getElementById('cancelReplyBtn').style.display = 'none'; };
-        document.getElementById('searchBtn').onclick = () => performSearch();
+        document.getElementById('searchBtn').onclick = performSearch;
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             if (e.key === 'Enter') performSearch();
-            else if (e.target.value === '') performSearch();
+            else performSearch();
         });
         document.getElementById('friendsIcon').onclick = showFriendsList;
         document.getElementById('burgerBtn').onclick = () => { document.getElementById('sidebar').classList.toggle('open'); };
