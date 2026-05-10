@@ -30,7 +30,6 @@
             backdrop-filter: blur(20px);
         }
 
-        /* ===== ПК-ВЕРСИЯ ===== */
         .sidebar {
             width: 300px;
             background: rgba(2,8,18,0.9);
@@ -43,7 +42,6 @@
             transition: transform 0.2s ease;
         }
 
-        /* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
         body.mobile-mode .messenger {
             width: 100%;
             height: 100vh;
@@ -91,7 +89,6 @@
             display: none;
         }
 
-        /* Общие стили */
         .user-info {
             display: flex;
             align-items: center;
@@ -488,9 +485,7 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
-    let searchFilter = '';
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -511,12 +506,13 @@
         return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}, ${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
     }
 
+    // Исправленная валидация: разрешены латиница, цифры, символы _ + - ~
     function validateLogin(login) {
         const loginWithoutAt = login.startsWith('@') ? login.substring(1) : login;
-        return /^[a-zA-Z0-9_+\-~]+$/.test(loginWithoutAt) && loginWithoutAt.length <= 20 && loginWithoutAt.length >= 3;
+        const regex = /^[a-zA-Z0-9_+\-~]+$/;
+        return regex.test(loginWithoutAt) && loginWithoutAt.length >= 3 && loginWithoutAt.length <= 20;
     }
 
-    // ========== АВТОРИЗАЦИЯ С @ ==========
     async function renderAuth() {
         document.getElementById('app').innerHTML = `
             <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center;">
@@ -545,7 +541,7 @@
             <button id="doLogin" class="auth-btn">Войти</button>
         `;
         document.getElementById('doLogin').onclick = async () => {
-            let login = document.getElementById('login').value;
+            let login = document.getElementById('login').value.trim();
             if (!login.startsWith('@')) login = '@' + login;
             const password = document.getElementById('password').value;
             const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
@@ -567,10 +563,11 @@
             <button id="doReg" class="auth-btn">Зарегистрироваться</button>
         `;
         document.getElementById('doReg').onclick = async () => {
-            let login = document.getElementById('regLogin').value;
-            if (!login.startsWith('@')) login = '@' + login;
+            let loginRaw = document.getElementById('regLogin').value.trim();
+            if (!loginRaw) { showToast('Введите логин', true); return; }
+            let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
             if (!validateLogin(login)) {
-                showToast('Логин: 3-20 символов, латиница, цифры, _+-~', true);
+                showToast('Логин должен содержать только латиницу, цифры и символы _ + - ~ (3-20 символов)', true);
                 return;
             }
             const res = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
@@ -588,14 +585,12 @@
         };
     }
 
-    // ========== ОТОБРАЖЕНИЕ АВАТАРКИ ==========
     function getAvatarForUser(login) {
         const avatar = userAvatars[login];
         if (avatar) return `<div class="message-avatar" style="background-image:url(${avatar}); background-size:cover;"></div>`;
         return `<div class="message-avatar">⚡</div>`;
     }
 
-    // ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==========
     function showUserProfile(login) {
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
             .then(r => r.json())
@@ -641,7 +636,6 @@
             });
     }
 
-    // ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ ==========
     function renderMessages() {
         const container = document.getElementById('messagesList');
         if (!container) return;
@@ -693,7 +687,6 @@
         container.scrollTop = container.scrollHeight;
     }
 
-    // ========== ОТПРАВКА ФАЙЛОВ ==========
     function sendFile(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -716,7 +709,6 @@
         document.body.appendChild(modal);
     };
 
-    // ========== ГОЛОСОВЫЕ СООБЩЕНИЯ ==========
     function startVoiceRecording() {
         if (isRecording) {
             if (mediaRecorder) {
@@ -765,7 +757,6 @@
         }
     }
 
-    // ========== ЭМОДЗИ ==========
     function showEmojiPicker() {
         const emojis = ['😀','😂','😍','😎','🔥','⭐','🎮','⚡','💀','❤️','👍','🙈','✨','🎉','💔','✅','❌'];
         const modal = document.createElement('div');
@@ -786,7 +777,6 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
-    // ========== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ГРУППЫ ==========
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modal = document.createElement('div');
@@ -818,12 +808,12 @@
         });
         
         modal.querySelector('#confirmCreateGroup').onclick = () => {
-            let login = modal.querySelector('#groupLogin').value;
-            if (!login.startsWith('@')) login = '@' + login;
+            let loginRaw = modal.querySelector('#groupLogin').value.trim();
+            let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
             const name = modal.querySelector('#groupName').value.trim();
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название', true); return; }
-            if (!validateLogin(login)) { showToast('Логин должен быть 3-20 символов, латиница, цифры, _+-~', true); return; }
+            if (!validateLogin(login)) { showToast('Логин должен содержать только латиницу, цифры и символы _ + - ~ (3-20 символов)', true); return; }
             
             groups.push({
                 id: Date.now(),
@@ -842,7 +832,6 @@
         modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
     }
 
-    // ========== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ КАНАЛА ==========
     function showCreateChannelModal() {
         let selectedEmoji = '📢';
         const modal = document.createElement('div');
@@ -874,12 +863,12 @@
         });
         
         modal.querySelector('#confirmCreateChannel').onclick = () => {
-            let login = modal.querySelector('#channelLogin').value;
-            if (!login.startsWith('@')) login = '@' + login;
+            let loginRaw = modal.querySelector('#channelLogin').value.trim();
+            let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
             const name = modal.querySelector('#channelName').value.trim();
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название', true); return; }
-            if (!validateLogin(login)) { showToast('Логин должен быть 3-20 символов, латиница, цифры, _+-~', true); return; }
+            if (!validateLogin(login)) { showToast('Логин должен содержать только латиницу, цифры и символы _ + - ~ (3-20 символов)', true); return; }
             
             channels.push({
                 id: Date.now(),
@@ -898,7 +887,6 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК (фильтрация чатов + поиск по @) ==========
     function filterChats() {
         const searchInput = document.getElementById('searchInput');
         if (!searchInput) return;
@@ -908,7 +896,6 @@
         if (!container) return;
         const items = container.querySelectorAll('.chat-item');
         
-        // Фильтрация чатов
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
             if (query === '' || name.includes(query)) {
@@ -918,15 +905,12 @@
             }
         });
         
-        // Удаляем старый временный элемент
         const existingTemp = document.getElementById('temp-search-result');
         if (existingTemp) existingTemp.remove();
         
-        // Поиск по @логин (пользователи, группы, каналы)
         if (query.startsWith('@')) {
             const searchLogin = query.substring(1);
             
-            // Ищем пользователя
             fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: searchLogin }) })
                 .then(r => r.json())
                 .then(data => {
@@ -934,12 +918,7 @@
                         const userDiv = document.createElement('div');
                         userDiv.id = 'temp-search-result';
                         userDiv.className = 'chat-item search-result-item';
-                        userDiv.innerHTML = `
-                            <div class="chat-info">
-                                <span>👤</span>
-                                <span>${data.login}</span>
-                            </div>
-                        `;
+                        userDiv.innerHTML = `<div class="chat-info"><span>👤</span><span>${data.login}</span></div>`;
                         userDiv.onclick = () => {
                             showUserProfile(data.login);
                             searchInput.value = '';
@@ -949,18 +928,12 @@
                     }
                 });
             
-            // Ищем группу
             const foundGroup = groups.find(g => g.login === query);
             if (foundGroup) {
                 const groupDiv = document.createElement('div');
                 groupDiv.id = 'temp-search-result';
                 groupDiv.className = 'chat-item search-result-item';
-                groupDiv.innerHTML = `
-                    <div class="chat-info">
-                        <span>${foundGroup.avatar || '👥'}</span>
-                        <span>${foundGroup.name} (группа)</span>
-                    </div>
-                `;
+                groupDiv.innerHTML = `<div class="chat-info"><span>${foundGroup.avatar || '👥'}</span><span>${foundGroup.name} (группа)</span></div>`;
                 groupDiv.onclick = () => {
                     if (!foundGroup.members.includes(currentUser)) {
                         if (confirm(`Вступить в группу "${foundGroup.name}"?`)) {
@@ -969,27 +942,19 @@
                             showToast(`Вы вступили в группу ${foundGroup.name}`);
                             renderChats();
                         }
-                    } else {
-                        showToast('Вы уже участник');
-                    }
+                    } else showToast('Вы уже участник');
                     searchInput.value = '';
                     filterChats();
                 };
                 container.prepend(groupDiv);
             }
             
-            // Ищем канал
             const foundChannel = channels.find(c => c.login === query);
             if (foundChannel) {
                 const channelDiv = document.createElement('div');
                 channelDiv.id = 'temp-search-result';
                 channelDiv.className = 'chat-item search-result-item';
-                channelDiv.innerHTML = `
-                    <div class="chat-info">
-                        <span>${foundChannel.avatar || '📢'}</span>
-                        <span>${foundChannel.name} (канал)</span>
-                    </div>
-                `;
+                channelDiv.innerHTML = `<div class="chat-info"><span>${foundChannel.avatar || '📢'}</span><span>${foundChannel.name} (канал)</span></div>`;
                 channelDiv.onclick = () => {
                     if (!foundChannel.members.includes(currentUser)) {
                         if (confirm(`Подписаться на канал "${foundChannel.name}"?`)) {
@@ -998,9 +963,7 @@
                             showToast(`Вы подписались на канал ${foundChannel.name}`);
                             renderChats();
                         }
-                    } else {
-                        showToast('Вы уже подписаны');
-                    }
+                    } else showToast('Вы уже подписаны');
                     searchInput.value = '';
                     filterChats();
                 };
@@ -1009,7 +972,6 @@
         }
     }
 
-    // ========== ДРУЗЬЯ ==========
     function showFriendsList() {
         const userFriends = friends[currentUser] || [];
         const modal = document.createElement('div');
@@ -1023,10 +985,7 @@
                 const avatar = userAvatars[login] || null;
                 const div = document.createElement('div');
                 div.className = 'friend-item';
-                div.innerHTML = `
-                    <div class="friend-avatar" style="${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div>
-                    <div><strong>${login}</strong></div>
-                `;
+                div.innerHTML = `<div class="friend-avatar" style="${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div><div><strong>${login}</strong></div>`;
                 div.onclick = () => { modal.remove(); showUserProfile(login); };
                 container.appendChild(div);
             });
@@ -1034,7 +993,6 @@
         modal.querySelector('#closeFriends').onclick = () => modal.remove();
     }
 
-    // ========== УДАЛЕНИЕ/ВЫХОД ИЗ ЧАТА ==========
     function deleteChat(chatId, chatName, leaveOnly) {
         if (chatId === 'favorites') { showToast('Избранное нельзя удалить', true); return; }
         if (confirm(leaveOnly ? `Выйти из чата "${chatName}"?` : `Удалить чат "${chatName}"?`)) {
@@ -1063,7 +1021,6 @@
         }
     }
 
-    // ========== ЗАГРУЗКА ЧАТОВ ==========
     async function loadChats() {
         const res = await fetch('/chats');
         let chats = await res.json();
@@ -1099,12 +1056,7 @@
         allChats.forEach(chat => {
             const div = document.createElement('div');
             div.className = 'chat-item';
-            div.innerHTML = `
-                <div class="chat-info">
-                    <span>${chat.avatar || '💬'}</span>
-                    <span>${chat.name} ${mutedChats[chat.id] ? '🔇' : ''}</span>
-                </div>
-            `;
+            div.innerHTML = `<div class="chat-info"><span>${chat.avatar || '💬'}</span><span>${chat.name} ${mutedChats[chat.id] ? '🔇' : ''}</span></div>`;
             div.onclick = () => {
                 currentChat = chat.id;
                 currentChatName = chat.name;
@@ -1143,7 +1095,6 @@
         }
     }
 
-    // ========== ОСНОВНОЙ МЕССЕНДЖЕР ==========
     async function startMessenger() {
         await loadChats();
         socket = io();
