@@ -78,6 +78,7 @@
         .list-info { flex: 1; }
         .list-title { font-size: 16px; font-weight: bold; }
         .list-sub { font-size: 11px; opacity: 0.6; }
+        .request-badge { background: #ff6600; border-radius: 20px; padding: 2px 8px; font-size: 10px; margin-left: 8px; }
         .empty-state { text-align: center; padding: 20px; opacity: 0.5; }
         .add-btn {
             background: rgba(0,200,255,0.2);
@@ -285,6 +286,7 @@
     let deletedChats = JSON.parse(localStorage.getItem('deletedChats') || '[]');
     let subgroups = JSON.parse(localStorage.getItem('subgroups') || '{}');
     let friends = JSON.parse(localStorage.getItem('friends') || '{}');
+    let friendRequests = JSON.parse(localStorage.getItem('friendRequests') || '{}'); // { fromUser: toUser }
     let groups = JSON.parse(localStorage.getItem('groups') || '[]');
     let channels = JSON.parse(localStorage.getItem('channels') || '[]');
     let replyTo = null;
@@ -301,6 +303,7 @@
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
     function saveSubgroups() { localStorage.setItem('subgroups', JSON.stringify(subgroups)); }
     function saveFriends() { localStorage.setItem('friends', JSON.stringify(friends)); }
+    function saveFriendRequests() { localStorage.setItem('friendRequests', JSON.stringify(friendRequests)); }
     function saveGroups() { localStorage.setItem('groups', JSON.stringify(groups)); }
     function saveChannels() { localStorage.setItem('channels', JSON.stringify(channels)); }
 
@@ -418,8 +421,10 @@
                     <div class="list-avatar" style="${avatarUrl ? `background-image:url(${avatarUrl}); background-size:cover;` : ''}">${!avatarUrl ? '⚡' : ''}</div>
                     <div class="list-info"><div class="list-title">${currentUser}</div><div class="list-sub">Нажмите для просмотра</div></div>
                 </div>
-                <div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>
+                <div class="section-header" style="margin-top:16px;">👥 Друзья</div>
             `;
+            renderFriendsListInPanel(container);
+            container.innerHTML += `<div class="section-header">💬 ЧАТЫ</div>`;
             renderChatsListInPanel(container, query);
             return;
         }
@@ -432,12 +437,15 @@
                 renderChatsListInPanel(container, query);
                 return;
             }
-            container.innerHTML = filtered.map(u => `
-                <div class="list-item" onclick="showUserProfile('${u.login}')">
-                    <div class="list-avatar" style="${userAvatars[u.login] ? `background-image:url(${userAvatars[u.login]}); background-size:cover;` : ''}">${!userAvatars[u.login] ? '👤' : ''}</div>
-                    <div class="list-info"><div class="list-title">${u.login}</div></div>
-                </div>
-            `).join('') + `<div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>`;
+            container.innerHTML = filtered.map(u => {
+                const hasRequest = friendRequests[currentUser]?.includes(u.login);
+                return `
+                    <div class="list-item" onclick="showUserProfile('${u.login}')">
+                        <div class="list-avatar" style="${userAvatars[u.login] ? `background-image:url(${userAvatars[u.login]}); background-size:cover;` : ''}">${!userAvatars[u.login] ? '👤' : ''}</div>
+                        <div class="list-info"><div class="list-title">${u.login}${hasRequest ? ' <span class="request-badge">заявка отправлена</span>' : ''}</div></div>
+                    </div>
+                `;
+            }).join('') + `<div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>`;
             renderChatsListInPanel(container, query);
             return;
         }
@@ -477,6 +485,62 @@
             renderChatsListInPanel(container, query);
             return;
         }
+    }
+
+    function renderFriendsListInPanel(container) {
+        const userFriends = friends[currentUser] || [];
+        const incomingRequests = [];
+        for (const [from, to] of Object.entries(friendRequests)) {
+            if (to === currentUser) incomingRequests.push(from);
+        }
+        if (userFriends.length === 0 && incomingRequests.length === 0) {
+            container.innerHTML += '<div class="empty-state">Нет друзей</div>';
+            return;
+        }
+        if (incomingRequests.length > 0) {
+            incomingRequests.forEach(from => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div class="list-avatar" style="${userAvatars[from] ? `background-image:url(${userAvatars[from]}); background-size:cover;` : ''}">${!userAvatars[from] ? '👤' : ''}</div>
+                    <div class="list-info">
+                        <div class="list-title">${from} <span class="request-badge">хочет подружиться</span></div>
+                        <div class="list-sub" style="display:flex; gap:8px; margin-top:4px;">
+                            <button class="accept-request" data-login="${from}" style="background:#0af; border:none; border-radius:20px; padding:4px 12px; cursor:pointer;">✅ Принять</button>
+                            <button class="decline-request" data-login="${from}" style="background:#ff6600; border:none; border-radius:20px; padding:4px 12px; cursor:pointer;">❌ Отклонить</button>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(div);
+                div.querySelector('.accept-request').onclick = () => {
+                    if (!friends[currentUser]) friends[currentUser] = [];
+                    friends[currentUser].push(from);
+                    if (!friends[from]) friends[from] = [];
+                    if (!friends[from].includes(currentUser)) friends[from].push(currentUser);
+                    delete friendRequests[from];
+                    saveFriends();
+                    saveFriendRequests();
+                    showToast(`Вы приняли заявку от ${from}`);
+                    renderLeftPanelContent();
+                };
+                div.querySelector('.decline-request').onclick = () => {
+                    delete friendRequests[from];
+                    saveFriendRequests();
+                    showToast(`Заявка от ${from} отклонена`);
+                    renderLeftPanelContent();
+                };
+            });
+        }
+        userFriends.forEach(login => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="list-avatar" style="${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}</div>
+                <div class="list-info"><div class="list-title">${login}</div><div class="list-sub">друг</div></div>
+            `;
+            div.onclick = () => { showUserProfile(login); };
+            container.appendChild(div);
+        });
     }
 
     function renderChatsListInPanel(container, query) {
@@ -577,6 +641,7 @@
                 if (!data.found) { showToast('Пользователь не найден'); return; }
                 const avatar = userAvatars[login] || null;
                 const isFriend = friends[currentUser]?.includes(login);
+                const requestSent = friendRequests[currentUser]?.includes(login);
                 const modal = document.createElement('div');
                 modal.className = 'modal';
                 modal.innerHTML = `
@@ -585,24 +650,40 @@
                         <h2>${data.login}</h2>
                         <div><strong>📅 Дата рождения:</strong> ${data.birthdate || 'не указана'}</div>
                         <div><strong>📝 О себе:</strong> ${data.about || 'не указано'}</div>
-                        <button id="friendBtn" class="auth-btn">${isFriend ? '❌ Удалить из друзей' : '➕ Добавить в друзья'}</button>
+                        <button id="friendBtn" class="auth-btn">${isFriend ? '❌ Удалить из друзей' : (requestSent ? '⏳ Заявка отправлена' : '➕ Добавить в друзья')}</button>
                         <button id="msgBtn" class="auth-btn">💬 Написать сообщение</button>
                         <button id="closeBtn" class="auth-btn">Закрыть</button>
                     </div>
                 `;
                 document.body.appendChild(modal);
                 document.getElementById('friendBtn').onclick = () => {
-                    if (!friends[currentUser]) friends[currentUser] = [];
-                    if (isFriend) friends[currentUser] = friends[currentUser].filter(f => f !== login);
-                    else friends[currentUser].push(login);
-                    saveFriends();
-                    modal.remove();
-                    showToast(isFriend ? 'Удалён из друзей' : 'Добавлен в друзья');
+                    if (!isFriend && !requestSent) {
+                        if (!friendRequests[currentUser]) friendRequests[currentUser] = [];
+                        friendRequests[currentUser].push(login);
+                        saveFriendRequests();
+                        showToast(`Заявка в друзья отправлена пользователю ${login}`);
+                        modal.remove();
+                        renderLeftPanelContent();
+                        // Отправляем уведомление через socket (если нужно)
+                        socket.emit('friendRequest', { from: currentUser, to: login });
+                    } else if (isFriend) {
+                        friends[currentUser] = friends[currentUser].filter(f => f !== login);
+                        if (friends[login]) friends[login] = friends[login].filter(f => f !== currentUser);
+                        saveFriends();
+                        showToast(`Вы удалили ${login} из друзей`);
+                        modal.remove();
+                        renderLeftPanelContent();
+                    } else {
+                        showToast('Заявка уже отправлена');
+                    }
                 };
                 document.getElementById('msgBtn').onclick = () => {
-                    const chatId = `chat_${Date.now()}`;
-                    allChats.push({ id: chatId, name: login, avatar: '💬', members: [currentUser, login] });
-                    messagesData[chatId] = [];
+                    let chatId = allChats.find(c => c.name === login && !c.isGroup && !c.isChannel)?.id;
+                    if (!chatId) {
+                        chatId = `chat_${Date.now()}`;
+                        allChats.push({ id: chatId, name: login, avatar: '💬', members: [currentUser, login] });
+                        messagesData[chatId] = [];
+                    }
                     renderLeftPanelContent();
                     currentChat = chatId;
                     currentChatName = login;
@@ -1166,6 +1247,12 @@
         });
         socket.on('messageDeleted', ({ chatId, messageIndex }) => {
             if (messagesData[chatId]) { messagesData[chatId].splice(messageIndex, 1); renderMessages(); }
+        });
+        socket.on('friendRequest', ({ from, to }) => {
+            if (to === currentUser) {
+                showToast(`📩 Пользователь ${from} хочет добавить вас в друзья!`);
+                renderLeftPanelContent();
+            }
         });
 
         document.getElementById('app').innerHTML = `
