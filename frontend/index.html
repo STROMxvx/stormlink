@@ -285,10 +285,10 @@
     let userAvatars = JSON.parse(localStorage.getItem('userAvatars') || '{}');
     let deletedChats = JSON.parse(localStorage.getItem('deletedChats') || '[]');
     let subgroups = JSON.parse(localStorage.getItem('subgroups') || '{}');
-    let friends = JSON.parse(localStorage.getItem('friends') || '{}');
-    let friendRequests = JSON.parse(localStorage.getItem('friendRequests') || '{}'); // { fromUser: toUser }
-    let groups = JSON.parse(localStorage.getItem('groups') || '[]');
-    let channels = JSON.parse(localStorage.getItem('channels') || '[]');
+    let friends = {};
+    let friendRequests = [];
+    let groups = [];
+    let channels = [];
     let replyTo = null;
     let mediaRecorder = null;
     let audioChunks = [];
@@ -302,10 +302,6 @@
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
     function saveSubgroups() { localStorage.setItem('subgroups', JSON.stringify(subgroups)); }
-    function saveFriends() { localStorage.setItem('friends', JSON.stringify(friends)); }
-    function saveFriendRequests() { localStorage.setItem('friendRequests', JSON.stringify(friendRequests)); }
-    function saveGroups() { localStorage.setItem('groups', JSON.stringify(groups)); }
-    function saveChannels() { localStorage.setItem('channels', JSON.stringify(channels)); }
 
     function getFormattedTime() {
         const now = new Date();
@@ -387,24 +383,13 @@
         };
     }
 
-    async function loadUsersList() {
-        const res = await fetch('/users');
-        const data = await res.json();
-        allUsersList = data.filter(u => u.login !== currentUser);
-        renderLeftPanelContent();
-    }
-
-    async function loadChannelsList() {
-        const res = await fetch('/chats');
-        const chats = await res.json();
-        channels = chats.filter(c => c.isChannel === true);
-        renderLeftPanelContent();
-    }
-
-    async function loadGroupsList() {
-        const res = await fetch('/chats');
-        const chats = await res.json();
-        groups = chats.filter(c => c.isGroup === true);
+    async function loadAllData() {
+        await Promise.all([
+            fetch('/users').then(r => r.json()).then(data => { allUsersList = data.filter(u => u.login !== currentUser); }),
+            fetch('/chats').then(r => r.json()).then(data => { allChats = data; groups = data.filter(c => c.isGroup === true); channels = data.filter(c => c.isChannel === true); }),
+            fetch(`/friends/${currentUser}`).then(r => r.json()).then(data => { friends = data.friends || []; }),
+            fetch(`/friend-requests/${currentUser}`).then(r => r.json()).then(data => { friendRequests = data.requests || []; })
+        ]);
         renderLeftPanelContent();
     }
 
@@ -438,11 +423,11 @@
                 return;
             }
             container.innerHTML = filtered.map(u => {
-                const hasRequest = friendRequests[currentUser]?.includes(u.login);
+                const requestSent = friendRequests?.includes(u.login);
                 return `
                     <div class="list-item" onclick="showUserProfile('${u.login}')">
                         <div class="list-avatar" style="${userAvatars[u.login] ? `background-image:url(${userAvatars[u.login]}); background-size:cover;` : ''}">${!userAvatars[u.login] ? '👤' : ''}</div>
-                        <div class="list-info"><div class="list-title">${u.login}${hasRequest ? ' <span class="request-badge">заявка отправлена</span>' : ''}</div></div>
+                        <div class="list-info"><div class="list-title">${u.login}${requestSent ? ' <span class="request-badge">заявка отправлена</span>' : ''}</div></div>
                     </div>
                 `;
             }).join('') + `<div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>`;
@@ -488,17 +473,12 @@
     }
 
     function renderFriendsListInPanel(container) {
-        const userFriends = friends[currentUser] || [];
-        const incomingRequests = [];
-        for (const [from, to] of Object.entries(friendRequests)) {
-            if (to === currentUser) incomingRequests.push(from);
-        }
-        if (userFriends.length === 0 && incomingRequests.length === 0) {
+        if ((!friends || friends.length === 0) && (!friendRequests || friendRequests.length === 0)) {
             container.innerHTML += '<div class="empty-state">Нет друзей</div>';
             return;
         }
-        if (incomingRequests.length > 0) {
-            incomingRequests.forEach(from => {
+        if (friendRequests && friendRequests.length > 0) {
+            friendRequests.forEach(from => {
                 const div = document.createElement('div');
                 div.className = 'list-item';
                 div.innerHTML = `
@@ -512,43 +492,40 @@
                     </div>
                 `;
                 container.appendChild(div);
-                div.querySelector('.accept-request').onclick = () => {
-                    if (!friends[currentUser]) friends[currentUser] = [];
-                    friends[currentUser].push(from);
-                    if (!friends[from]) friends[from] = [];
-                    if (!friends[from].includes(currentUser)) friends[from].push(currentUser);
-                    delete friendRequests[from];
-                    saveFriends();
-                    saveFriendRequests();
+                div.querySelector('.accept-request').onclick = async () => {
+                    await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
+                    await loadAllData();
+                    renderLeftPanelContent();
                     showToast(`Вы приняли заявку от ${from}`);
-                    renderLeftPanelContent();
                 };
-                div.querySelector('.decline-request').onclick = () => {
-                    delete friendRequests[from];
-                    saveFriendRequests();
-                    showToast(`Заявка от ${from} отклонена`);
+                div.querySelector('.decline-request').onclick = async () => {
+                    await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
+                    await loadAllData();
                     renderLeftPanelContent();
+                    showToast(`Заявка от ${from} отклонена`);
                 };
             });
         }
-        userFriends.forEach(login => {
-            const div = document.createElement('div');
-            div.className = 'list-item';
-            div.innerHTML = `
-                <div class="list-avatar" style="${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}</div>
-                <div class="list-info"><div class="list-title">${login}</div><div class="list-sub">друг</div></div>
-            `;
-            div.onclick = () => { showUserProfile(login); };
-            container.appendChild(div);
-        });
+        if (friends && friends.length > 0) {
+            friends.forEach(login => {
+                const div = document.createElement('div');
+                div.className = 'list-item';
+                div.innerHTML = `
+                    <div class="list-avatar" style="${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}</div>
+                    <div class="list-info"><div class="list-title">${login}</div><div class="list-sub">друг</div></div>
+                `;
+                div.onclick = () => { showUserProfile(login); };
+                container.appendChild(div);
+            });
+        }
     }
 
     function renderChatsListInPanel(container, query) {
         const myChats = allChats.filter(chat => {
             if (chat.id === 'favorites') return true;
-            if (chat.isGroup && groups.find(g => g.id === chat.id)?.members?.includes(currentUser)) return true;
-            if (chat.isChannel && channels.find(c => c.id === chat.id)?.members?.includes(currentUser)) return true;
-            if (!chat.isGroup && !chat.isChannel && chat.id !== 'favorites') return true;
+            if (chat.isGroup && chat.members?.includes(currentUser)) return true;
+            if (chat.isChannel && chat.members?.includes(currentUser)) return true;
+            if (!chat.isGroup && !chat.isChannel && chat.members?.includes(currentUser)) return true;
             return false;
         });
         const filteredChats = myChats.filter(chat => !query || chat.name.toLowerCase().includes(query));
@@ -640,8 +617,8 @@
             .then(data => {
                 if (!data.found) { showToast('Пользователь не найден'); return; }
                 const avatar = userAvatars[login] || null;
-                const isFriend = friends[currentUser]?.includes(login);
-                const requestSent = friendRequests[currentUser]?.includes(login);
+                const isFriend = friends?.includes(login);
+                const requestSent = friendRequests?.includes(login);
                 const modal = document.createElement('div');
                 modal.className = 'modal';
                 modal.innerHTML = `
@@ -656,40 +633,34 @@
                     </div>
                 `;
                 document.body.appendChild(modal);
-                document.getElementById('friendBtn').onclick = () => {
+                document.getElementById('friendBtn').onclick = async () => {
                     if (!isFriend && !requestSent) {
-                        if (!friendRequests[currentUser]) friendRequests[currentUser] = [];
-                        friendRequests[currentUser].push(login);
-                        saveFriendRequests();
+                        await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
                         showToast(`Заявка в друзья отправлена пользователю ${login}`);
                         modal.remove();
+                        await loadAllData();
                         renderLeftPanelContent();
-                        // Отправляем уведомление через socket (если нужно)
-                        socket.emit('friendRequest', { from: currentUser, to: login });
                     } else if (isFriend) {
-                        friends[currentUser] = friends[currentUser].filter(f => f !== login);
-                        if (friends[login]) friends[login] = friends[login].filter(f => f !== currentUser);
-                        saveFriends();
-                        showToast(`Вы удалили ${login} из друзей`);
-                        modal.remove();
-                        renderLeftPanelContent();
+                        showToast('Удаление друга пока не реализовано на сервере');
                     } else {
                         showToast('Заявка уже отправлена');
                     }
                 };
-                document.getElementById('msgBtn').onclick = () => {
-                    let chatId = allChats.find(c => c.name === login && !c.isGroup && !c.isChannel)?.id;
-                    if (!chatId) {
-                        chatId = `chat_${Date.now()}`;
-                        allChats.push({ id: chatId, name: login, avatar: '💬', members: [currentUser, login] });
-                        messagesData[chatId] = [];
+                document.getElementById('msgBtn').onclick = async () => {
+                    let chat = allChats.find(c => c.members && c.members.includes(currentUser) && c.members.includes(login) && !c.isGroup && !c.isChannel);
+                    if (!chat) {
+                        const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: login, avatar: '💬', creator: currentUser, members: [currentUser, login], isGroup: false, isChannel: false }) });
+                        const data = await res.json();
+                        await loadAllData();
+                        chat = allChats.find(c => c.id === data.chatId);
                     }
-                    renderLeftPanelContent();
-                    currentChat = chatId;
-                    currentChatName = login;
-                    document.getElementById('chatTitle').innerText = login;
-                    loadMessages();
-                    socket.emit('join', currentChat);
+                    if (chat) {
+                        currentChat = chat.id;
+                        currentChatName = chat.name;
+                        document.getElementById('chatTitle').innerText = chat.name;
+                        loadMessages();
+                        socket.emit('join', currentChat);
+                    }
                     modal.remove();
                 };
                 document.getElementById('closeBtn').onclick = () => modal.remove();
@@ -714,18 +685,15 @@
         `;
         document.body.appendChild(modal);
         if (!isSubscribed) {
-            document.getElementById('subscribeBtn').onclick = () => {
-                if (!channel.members) channel.members = [];
-                channel.members.push(currentUser);
-                saveChannels();
+            document.getElementById('subscribeBtn').onclick = async () => {
+                await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: channel.id, memberLogin: currentUser }) });
+                await loadAllData();
                 showToast(`Вы подписались на канал ${channel.name}`);
-                allChats.push({ id: `channel_${channel.id}`, name: channel.name, avatar: channel.avatar, isChannel: true });
-                renderLeftPanelContent();
                 modal.remove();
             };
         } else {
             document.getElementById('openBtn').onclick = () => {
-                currentChat = `channel_${channel.id}`;
+                currentChat = channel.id;
                 currentChatName = channel.name;
                 document.getElementById('chatTitle').innerText = channel.name;
                 if (!messagesData[currentChat]) messagesData[currentChat] = [];
@@ -756,18 +724,15 @@
         `;
         document.body.appendChild(modal);
         if (!isMember) {
-            document.getElementById('joinBtn').onclick = () => {
-                if (!group.members) group.members = [];
-                group.members.push(currentUser);
-                saveGroups();
+            document.getElementById('joinBtn').onclick = async () => {
+                await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: group.id, memberLogin: currentUser }) });
+                await loadAllData();
                 showToast(`Вы вступили в группу ${group.name}`);
-                allChats.push({ id: `group_${group.id}`, name: group.name, avatar: group.avatar, isGroup: true });
-                renderLeftPanelContent();
                 modal.remove();
             };
         } else {
             document.getElementById('openBtn').onclick = () => {
-                currentChat = `group_${group.id}`;
+                currentChat = group.id;
                 currentChatName = group.name;
                 document.getElementById('chatTitle').innerText = group.name;
                 if (!messagesData[currentChat]) messagesData[currentChat] = [];
@@ -799,16 +764,14 @@
         `;
         document.body.appendChild(modal);
         document.querySelectorAll('#emojiPickerGroup .emoji-option').forEach(el => { el.onclick = () => { selectedEmoji = el.innerText; }; });
-        modal.querySelector('#confirmCreateGroup').onclick = () => {
+        modal.querySelector('#confirmCreateGroup').onclick = async () => {
             let loginRaw = modal.querySelector('#groupLogin').value.trim();
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
             const name = modal.querySelector('#groupName').value.trim();
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser], isGroup: true });
-            saveGroups();
-            allChats.push({ id: groups[groups.length-1].id, name: name, avatar: selectedEmoji, isGroup: true });
-            renderLeftPanelContent();
+            await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isGroup: true }) });
+            await loadAllData();
             showToast(`Группа "${name}" создана`);
             modal.remove();
         };
@@ -835,44 +798,18 @@
         `;
         document.body.appendChild(modal);
         document.querySelectorAll('#emojiPickerChannel .emoji-option').forEach(el => { el.onclick = () => { selectedEmoji = el.innerText; }; });
-        modal.querySelector('#confirmCreateChannel').onclick = () => {
+        modal.querySelector('#confirmCreateChannel').onclick = async () => {
             let loginRaw = modal.querySelector('#channelLogin').value.trim();
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
             const name = modal.querySelector('#channelName').value.trim();
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [], isChannel: true });
-            saveChannels();
-            allChats.push({ id: channels[channels.length-1].id, name: name, avatar: selectedEmoji, isChannel: true });
-            renderLeftPanelContent();
+            await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [], isChannel: true }) });
+            await loadAllData();
             showToast(`Канал "${name}" создан`);
             modal.remove();
         };
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
-    }
-
-    function showAddSubgroupModal(groupId, groupName) {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-box">
-                <h3>➕ Добавить подгруппу в "${groupName}"</h3>
-                <input type="text" id="subgroupName" placeholder="Название подгруппы">
-                <div class="modal-buttons"><button id="confirmCreate">Создать</button><button id="cancelCreate">Отмена</button></div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        modal.querySelector('#confirmCreate').onclick = () => {
-            const name = modal.querySelector('#subgroupName').value.trim();
-            if (!name) return showToast('Введите название');
-            if (!subgroups[groupId]) subgroups[groupId] = [];
-            subgroups[groupId].push({ id: Date.now(), name: name });
-            saveSubgroups();
-            renderLeftPanelContent();
-            modal.remove();
-            showToast(`Подгруппа "${name}" создана`);
-        };
-        modal.querySelector('#cancelCreate').onclick = () => modal.remove();
     }
 
     function getAvatarForUser(login) {
@@ -1120,15 +1057,14 @@
     }
 
     function showFriendsList() {
-        const userFriends = friends[currentUser] || [];
         const modal = document.createElement('div');
         modal.className = 'modal';
         modal.innerHTML = `<div class="friends-list"><h3>👥 Друзья</h3><div id="friendsContainer"></div><button id="closeFriends" class="auth-btn">Закрыть</button></div>`;
         document.body.appendChild(modal);
         const container = modal.querySelector('#friendsContainer');
-        if (userFriends.length === 0) container.innerHTML = '<p>Нет друзей</p>';
+        if (!friends || friends.length === 0) container.innerHTML = '<p>Нет друзей</p>';
         else {
-            userFriends.forEach(login => {
+            friends.forEach(login => {
                 const avatar = userAvatars[login] || null;
                 const div = document.createElement('div');
                 div.className = 'friend-item';
@@ -1140,13 +1076,28 @@
         modal.querySelector('#closeFriends').onclick = () => modal.remove();
     }
 
-    async function loadChats() {
-        const res = await fetch('/chats');
-        let chats = await res.json();
-        allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
-        if (!allChats.find(c => c.id === 'favorites')) allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true });
-        groups.forEach(g => { if (g.members?.includes(currentUser) && !allChats.some(c => c.id === g.id)) allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true }); });
-        channels.forEach(c => { if (c.members?.includes(currentUser) && !allChats.some(ch => ch.id === c.id)) allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true }); });
+    function showAddSubgroupModal(groupId, groupName) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h3>➕ Добавить подгруппу в "${groupName}"</h3>
+                <input type="text" id="subgroupName" placeholder="Название подгруппы">
+                <div class="modal-buttons"><button id="confirmCreate">Создать</button><button id="cancelCreate">Отмена</button></div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#confirmCreate').onclick = () => {
+            const name = modal.querySelector('#subgroupName').value.trim();
+            if (!name) return showToast('Введите название');
+            if (!subgroups[groupId]) subgroups[groupId] = [];
+            subgroups[groupId].push({ id: Date.now(), name: name });
+            saveSubgroups();
+            renderLeftPanelContent();
+            modal.remove();
+            showToast(`Подгруппа "${name}" создана`);
+        };
+        modal.querySelector('#cancelCreate').onclick = () => modal.remove();
     }
 
     function showChatMenu() {
@@ -1156,7 +1107,7 @@
         const isFavorites = currentChat === 'favorites';
         const currentChatObj = allChats.find(c => c.id === currentChat);
         const isGroup = currentChatObj?.isGroup === true;
-        const isCreator = isGroup && groups.find(g => g.id === currentChat)?.creator === currentUser;
+        const isCreator = isGroup && currentChatObj?.creator === currentUser;
         let html = `<div id="menuClear" style="padding:8px 16px; cursor:pointer;">🧹 Очистить чат</div>`;
         if (isGroup && isCreator) html += `<div id="menuAddSubgroup" style="padding:8px 16px; cursor:pointer;">➕ Добавить подгруппу</div>`;
         html += `<div id="menuSearch" style="padding:8px 16px; cursor:pointer;">🔍 Поиск в чате</div><div id="menuNotifications" style="padding:8px 16px; cursor:pointer;">${isMuted ? '🔔 Вкл уведомления' : '🔕 Выкл уведомления'}</div>`;
@@ -1193,7 +1144,8 @@
         };
         if (!isFavorites && menu.querySelector('#menuDelete')) menu.querySelector('#menuDelete').onclick = () => {
             showConfirmDialog(`Удалить чат "${currentChatName}"?`, () => {
-                deleteChat(currentChat, currentChatName, false);
+                if (currentChat === 'favorites') showToast('Избранное нельзя удалить');
+                else showToast('Удаление чата пока не реализовано на сервере');
                 menu.remove();
             });
             menu.remove();
@@ -1201,37 +1153,8 @@
         setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 10);
     }
 
-    function deleteChat(chatId, chatName, leaveOnly) {
-        if (chatId === 'favorites') { showToast('Избранное нельзя удалить'); return; }
-        if (leaveOnly) {
-            const group = groups.find(g => g.id == chatId);
-            if (group) group.members = group.members.filter(m => m !== currentUser);
-            const channel = channels.find(c => c.id == chatId);
-            if (channel) channel.members = channel.members.filter(m => m !== currentUser);
-            saveGroups(); saveChannels();
-        } else {
-            groups = groups.filter(g => g.id != chatId);
-            channels = channels.filter(c => c.id != chatId);
-            saveGroups(); saveChannels();
-        }
-        allChats = allChats.filter(c => c.id !== chatId);
-        delete messagesData[chatId];
-        renderLeftPanelContent();
-        if (currentChat === chatId) {
-            currentChat = 'favorites';
-            currentChatName = 'Избранное';
-            document.getElementById('chatTitle').innerText = 'Избранное';
-            loadMessages();
-            socket.emit('join', currentChat);
-        }
-        showToast(leaveOnly ? `Вы вышли из ${chatName}` : `Чат ${chatName} удалён`);
-    }
-
     async function startMessenger() {
-        await loadUsersList();
-        await loadChannelsList();
-        await loadGroupsList();
-        await loadChats();
+        await loadAllData();
         socket = io();
         socket.on('newMessage', (msg) => {
             if (currentChat === 'favorites') return;
@@ -1246,12 +1169,12 @@
             }
         });
         socket.on('messageDeleted', ({ chatId, messageIndex }) => {
-            if (messagesData[chatId]) { messagesData[chatId].splice(messageIndex, 1); renderMessages(); }
+            if (messagesData[chatId]) { messagesData[chatId].splice(messageIndex, 1); if (chatId === currentChat) renderMessages(); }
         });
         socket.on('friendRequest', ({ from, to }) => {
             if (to === currentUser) {
                 showToast(`📩 Пользователь ${from} хочет добавить вас в друзья!`);
-                renderLeftPanelContent();
+                loadAllData();
             }
         });
 
