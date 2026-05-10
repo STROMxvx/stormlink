@@ -458,6 +458,7 @@
 <div id="app"></div>
 <script src="/socket.io/socket.io.js"></script>
 <script>
+    // ========== ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ ==========
     let socket = null;
     let currentUser = null;
     let currentUserData = null;
@@ -476,6 +477,7 @@
     let audioChunks = [];
     let isRecording = false;
 
+    // ========== СОХРАНЕНИЕ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -569,6 +571,7 @@
         };
     }
 
+    // ========== ПРОФИЛИ ==========
     function showGroupProfile(group) {
         const memberCount = group.members.length;
         const membersList = group.members.map(m => `<div class="member-item"><div class="avatar" style="width:24px; height:24px; font-size:12px;">👤</div><span>${m}</span></div>`).join('');
@@ -857,6 +860,7 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
+    // ========== СОЗДАНИЕ ГРУППЫ ==========
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modal = document.createElement('div');
@@ -883,9 +887,10 @@
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
             if (!login) { showToast('Введите логин группы'); return; }
-            groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] });
+            const newGroup = { id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] };
+            groups.push(newGroup);
             saveGroups();
-            allChats.push({ id: groups[groups.length-1].id, name: name, avatar: selectedEmoji, isGroup: true, creator: currentUser });
+            allChats.push({ id: newGroup.id, name: name, avatar: selectedEmoji, isGroup: true, creator: currentUser });
             renderChats();
             showToast(`Группа "${name}" создана`);
             modal.remove();
@@ -893,6 +898,7 @@
         modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
     }
 
+    // ========== СОЗДАНИЕ КАНАЛА ==========
     function showCreateChannelModal() {
         let selectedEmoji = '📢';
         const modal = document.createElement('div');
@@ -919,9 +925,10 @@
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
             if (!login) { showToast('Введите логин канала'); return; }
-            channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] });
+            const newChannel = { id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] };
+            channels.push(newChannel);
             saveChannels();
-            allChats.push({ id: channels[channels.length-1].id, name: name, avatar: selectedEmoji, isChannel: true, creator: currentUser });
+            allChats.push({ id: newChannel.id, name: name, avatar: selectedEmoji, isChannel: true, creator: currentUser });
             renderChats();
             showToast(`Канал "${name}" создан`);
             modal.remove();
@@ -929,7 +936,7 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК (РАБОТАЕТ!) ==========
+    // ========== ПОИСК (ГАРАНТИРОВАННО РАБОТАЕТ) ==========
     function performSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('chatsList');
@@ -939,19 +946,20 @@
         if (existingTemp) existingTemp.remove();
         
         if (!query) {
+            // Показываем все чаты
             const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
             items.forEach(item => item.style.display = 'flex');
             return;
         }
         
-        // Фильтруем существующие чаты по названию
+        // Сначала фильтруем существующие чаты по названию
         const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
             item.style.display = name.includes(query) ? 'flex' : 'none';
         });
         
-        // Ищем пользователя (кроме себя)
+        // Ищем пользователя через API
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
             .then(r => r.json())
             .then(data => {
@@ -967,9 +975,10 @@
                     };
                     container.prepend(userDiv);
                 }
-            });
+            })
+            .catch(err => console.log('Ошибка поиска пользователя:', err));
         
-        // Ищем группу
+        // Ищем группу в локальном хранилище
         const foundGroup = groups.find(g => g.login === query);
         if (foundGroup) {
             const groupDiv = document.createElement('div');
@@ -994,7 +1003,7 @@
             container.prepend(groupDiv);
         }
         
-        // Ищем канал
+        // Ищем канал в локальном хранилище
         const foundChannel = channels.find(c => c.login === query);
         if (foundChannel) {
             const channelDiv = document.createElement('div');
@@ -1199,6 +1208,7 @@
         }
         renderChats();
         loadMessages();
+
         document.getElementById('sendBtn').onclick = () => {
             const input = document.getElementById('msgInput');
             let text = input.value.trim();
@@ -1266,10 +1276,7 @@
         document.getElementById('cancelVoiceBtn').onclick = cancelVoiceRecording;
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerText = ''; document.getElementById('cancelReplyBtn').style.display = 'none'; };
         document.getElementById('searchBtn').onclick = performSearch;
-        document.getElementById('searchInput').addEventListener('keyup', (e) => {
-            if (e.key === 'Enter') performSearch();
-            else performSearch();
-        });
+        document.getElementById('searchInput').addEventListener('keyup', () => performSearch());
         document.getElementById('friendsIcon').onclick = showFriendsList;
         document.getElementById('burgerBtn').onclick = () => { document.getElementById('sidebar').classList.toggle('open'); };
         document.getElementById('chatTitle').onclick = () => {
