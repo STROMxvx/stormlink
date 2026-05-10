@@ -413,6 +413,10 @@
             cursor: pointer;
             font-weight: bold;
         }
+        .search-result-item {
+            background: rgba(0,255,255,0.15);
+            border: 1px solid #0af;
+        }
     </style>
 </head>
 <body>
@@ -437,7 +441,9 @@
     let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
+    let searchFilter = '';
 
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -462,6 +468,7 @@
         return /^[a-zA-Z0-9_+\-~]+$/.test(login) && login.length <= 20 && login.length >= 3;
     }
 
+    // ========== АВТОРИЗАЦИЯ ==========
     async function renderAuth() {
         document.getElementById('app').innerHTML = `
             <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center;">
@@ -525,12 +532,14 @@
         };
     }
 
+    // ========== ОТОБРАЖЕНИЕ АВАТАРКИ ==========
     function getAvatarForUser(login) {
         const avatar = userAvatars[login];
         if (avatar) return `<div class="message-avatar" style="background-image:url(${avatar}); background-size:cover;"></div>`;
         return `<div class="message-avatar">⚡</div>`;
     }
 
+    // ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==========
     function showUserProfile(login) {
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
             .then(r => r.json())
@@ -576,6 +585,7 @@
             });
     }
 
+    // ========== ОТОБРАЖЕНИЕ СООБЩЕНИЙ ==========
     function renderMessages() {
         const container = document.getElementById('messagesList');
         if (!container) return;
@@ -627,6 +637,7 @@
         container.scrollTop = container.scrollHeight;
     }
 
+    // ========== ОТПРАВКА ФАЙЛОВ ==========
     function sendFile(file) {
         const reader = new FileReader();
         reader.onload = (e) => {
@@ -649,6 +660,7 @@
         document.body.appendChild(modal);
     };
 
+    // ========== ГОЛОСОВЫЕ СООБЩЕНИЯ ==========
     function startVoiceRecording() {
         if (isRecording) {
             if (mediaRecorder) {
@@ -697,6 +709,7 @@
         }
     }
 
+    // ========== ЭМОДЗИ ==========
     function showEmojiPicker() {
         const emojis = ['😀','😂','😍','😎','🔥','⭐','🎮','⚡','💀','❤️','👍','🙈','✨','🎉','💔','✅','❌'];
         const modal = document.createElement('div');
@@ -717,55 +730,63 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
-    function showSearchModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
-            <div class="modal-box">
-                <h3>🔍 Поиск</h3>
-                <input type="text" id="searchQuery" placeholder="Логин пользователя или группы/канала">
-                <div class="modal-buttons" style="display:flex; gap:12px; margin-top:16px;">
-                    <button id="searchUserBtn" class="auth-btn">👤 Пользователь</button>
-                    <button id="searchGroupBtn" class="auth-btn">👥 Группа/Канал</button>
-                    <button id="cancelSearchBtn" class="auth-btn">Отмена</button>
-                </div>
-            </div>
-        `;
-        document.body.appendChild(modal);
-        modal.querySelector('#searchUserBtn').onclick = () => {
-            const query = modal.querySelector('#searchQuery').value;
-            if (query) showUserProfile(query);
-            modal.remove();
-        };
-        modal.querySelector('#searchGroupBtn').onclick = () => {
-            const query = modal.querySelector('#searchQuery').value.toLowerCase();
-            if (!query) { showToast('Введите логин', true); return; }
-            const foundGroup = groups.find(g => g.login === query);
-            const foundChannel = channels.find(c => c.login === query);
-            if (foundGroup) {
-                if (!foundGroup.members.includes(currentUser)) {
-                    if (confirm(`Вступить в группу "${foundGroup.name}"?`)) {
-                        foundGroup.members.push(currentUser);
-                        saveGroups();
-                        showToast(`Вы вступили в группу ${foundGroup.name}`);
-                        renderChats();
+    // ========== ПОИСК ПОЛЬЗОВАТЕЛЕЙ И ГРУПП (фильтрация чатов) ==========
+    function filterChats() {
+        const searchInput = document.getElementById('searchInput');
+        if (!searchInput) return;
+        const query = searchInput.value.toLowerCase().trim();
+        
+        // Фильтруем чаты по названию
+        const container = document.getElementById('chatsList');
+        if (!container) return;
+        const items = container.querySelectorAll('.chat-item');
+        
+        // Сначала скрываем все чаты
+        items.forEach(item => {
+            const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
+            if (query === '' || name.includes(query)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
+            }
+        });
+        
+        // Если есть точное совпадение с @логин, ищем пользователя
+        if (query.startsWith('@')) {
+            const login = query.substring(1);
+            fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
+                .then(r => r.json())
+                .then(data => {
+                    if (data.found) {
+                        // Убираем предыдущие результаты поиска пользователей
+                        const existingUserItem = document.getElementById('search-user-item');
+                        if (existingUserItem) existingUserItem.remove();
+                        
+                        const userDiv = document.createElement('div');
+                        userDiv.id = 'search-user-item';
+                        userDiv.className = 'chat-item search-result-item';
+                        userDiv.innerHTML = `
+                            <div class="chat-info">
+                                <span>👤</span>
+                                <span>${data.login}</span>
+                            </div>
+                        `;
+                        userDiv.onclick = () => {
+                            showUserProfile(data.login);
+                            // Очищаем поиск
+                            searchInput.value = '';
+                            filterChats();
+                        };
+                        container.prepend(userDiv);
                     }
-                } else showToast('Вы уже участник');
-            } else if (foundChannel) {
-                if (!foundChannel.members.includes(currentUser)) {
-                    if (confirm(`Подписаться на канал "${foundChannel.name}"?`)) {
-                        foundChannel.members.push(currentUser);
-                        saveChannels();
-                        showToast(`Вы подписались на канал ${foundChannel.name}`);
-                        renderChats();
-                    }
-                } else showToast('Вы уже подписаны');
-            } else showToast('Не найдено', true);
-            modal.remove();
-        };
-        modal.querySelector('#cancelSearchBtn').onclick = () => modal.remove();
+                });
+        } else {
+            const existingUserItem = document.getElementById('search-user-item');
+            if (existingUserItem) existingUserItem.remove();
+        }
     }
 
+    // ========== ДРУЗЬЯ ==========
     function showFriendsList() {
         const userFriends = friends[currentUser] || [];
         const modal = document.createElement('div');
@@ -790,6 +811,7 @@
         modal.querySelector('#closeFriends').onclick = () => modal.remove();
     }
 
+    // ========== УДАЛЕНИЕ/ВЫХОД ИЗ ЧАТА ==========
     function deleteChat(chatId, chatName, leaveOnly) {
         if (chatId === 'favorites') { showToast('Избранное нельзя удалить', true); return; }
         if (confirm(leaveOnly ? `Выйти из чата "${chatName}"?` : `Удалить чат "${chatName}"?`)) {
@@ -818,10 +840,99 @@
         }
     }
 
+    // ========== ЗАГРУЗКА ЧАТОВ (с отдельным избранным для каждого пользователя) ==========
+    async function loadChats() {
+        const res = await fetch('/chats');
+        let chats = await res.json();
+        allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
+        
+        // Избранное для каждого пользователя отдельно
+        const favoritesKey = `favorites_${currentUser}`;
+        let userFavorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+        
+        // Проверяем, есть ли чат "Избранное" в списке
+        if (!allChats.find(c => c.id === 'favorites')) {
+            allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true, messages: userFavorites });
+        } else {
+            // Загружаем сохранённые сообщения избранного для этого пользователя
+            const favChat = allChats.find(c => c.id === 'favorites');
+            if (favChat) {
+                messagesData['favorites'] = userFavorites;
+            }
+        }
+        
+        groups.forEach(g => {
+            if (g.members.includes(currentUser)) {
+                allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true, creator: g.creator });
+            }
+        });
+        channels.forEach(c => {
+            if (c.members.includes(currentUser)) {
+                allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true, creator: c.creator });
+            }
+        });
+    }
+
+    function renderChats() {
+        const container = document.getElementById('chatsList');
+        if (!container) return;
+        container.innerHTML = '';
+        allChats.forEach(chat => {
+            const div = document.createElement('div');
+            div.className = 'chat-item';
+            div.innerHTML = `
+                <div class="chat-info">
+                    <span>${chat.avatar || '💬'}</span>
+                    <span>${chat.name} ${mutedChats[chat.id] ? '🔇' : ''}</span>
+                </div>
+            `;
+            div.onclick = () => {
+                currentChat = chat.id;
+                currentChatName = chat.name;
+                document.getElementById('chatTitle').innerText = chat.name;
+                loadMessages();
+                socket.emit('join', currentChat);
+                replyTo = null;
+                document.getElementById('replyIndicator').innerText = '';
+                document.getElementById('cancelReplyBtn').style.display = 'none';
+            };
+            container.appendChild(div);
+        });
+        // Применяем фильтр после рендера
+        filterChats();
+    }
+
+    async function loadMessages() {
+        // Если это избранное, берём из localStorage
+        if (currentChat === 'favorites') {
+            const favoritesKey = `favorites_${currentUser}`;
+            messagesData['favorites'] = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+            renderMessages();
+            return;
+        }
+        const res = await fetch(`/messages/${currentChat}`);
+        messagesData[currentChat] = await res.json();
+        renderMessages();
+    }
+
+    // Перехватываем отправку сообщений, чтобы сохранять избранное
+    function saveFavoriteMessage(text) {
+        const favoritesKey = `favorites_${currentUser}`;
+        let favMessages = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
+        favMessages.push({ from: currentUser, text: text, time: getFormattedTime() });
+        localStorage.setItem(favoritesKey, JSON.stringify(favMessages));
+        if (currentChat === 'favorites') {
+            messagesData['favorites'] = favMessages;
+            renderMessages();
+        }
+    }
+
+    // ========== ОСНОВНОЙ МЕССЕНДЖЕР ==========
     async function startMessenger() {
         await loadChats();
         socket = io();
         socket.on('newMessage', (msg) => {
+            if (currentChat === 'favorites') return; // избранное через localStorage
             if (!messagesData[currentChat]) messagesData[currentChat] = [];
             messagesData[currentChat].push(msg);
             renderMessages();
@@ -833,6 +944,7 @@
             }
         });
         socket.on('messageDeleted', ({ chatId, messageIndex }) => {
+            if (chatId === 'favorites') return;
             if (messagesData[chatId]) { messagesData[chatId].splice(messageIndex, 1); if (chatId === currentChat) renderMessages(); }
         });
 
@@ -845,8 +957,8 @@
                         <div><strong>${currentUser}</strong></div>
                     </div>
                     <div class="search-player">
-                        <input type="text" id="searchInput" placeholder="Поиск...">
-                        <button id="openSearchBtn">🔍</button>
+                        <input type="text" id="searchInput" placeholder="Поиск чатов или @логин...">
+                        <button id="searchBtn">🔍</button>
                     </div>
                     <div class="chats-list" id="chatsList"></div>
                     <div class="add-btn" id="createGroupBtn">👥 Создать группу</div>
@@ -901,7 +1013,11 @@
                 document.getElementById('cancelReplyBtn').style.display = 'none';
             }
             if (text) {
-                socket.emit('sendMessage', { chatId: currentChat, from: currentUser, text, time: getFormattedTime() });
+                if (currentChat === 'favorites') {
+                    saveFavoriteMessage(text);
+                } else {
+                    socket.emit('sendMessage', { chatId: currentChat, from: currentUser, text, time: getFormattedTime() });
+                }
                 input.value = '';
             }
         };
@@ -950,7 +1066,12 @@
             menu.style.top = rect.bottom + 5 + 'px';
             menu.querySelector('#menuClear').onclick = () => {
                 if (confirm(`Очистить чат "${currentChatName}"?`)) {
-                    messagesData[currentChat] = [];
+                    if (currentChat === 'favorites') {
+                        localStorage.setItem(`favorites_${currentUser}`, JSON.stringify([]));
+                        messagesData['favorites'] = [];
+                    } else {
+                        messagesData[currentChat] = [];
+                    }
                     renderMessages();
                 }
                 menu.remove();
@@ -990,7 +1111,11 @@
             document.getElementById('replyIndicator').innerText = '';
             document.getElementById('cancelReplyBtn').style.display = 'none';
         };
-        document.getElementById('openSearchBtn').onclick = showSearchModal;
+        document.getElementById('searchBtn').onclick = filterChats;
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') filterChats();
+            else filterChats();
+        });
         document.getElementById('friendsIcon').onclick = showFriendsList;
         document.getElementById('burgerBtn').onclick = () => {
             document.getElementById('sidebar').classList.toggle('open');
@@ -1001,58 +1126,6 @@
         };
 
         socket.emit('join', currentChat);
-    }
-
-    async function loadChats() {
-        const res = await fetch('/chats');
-        let chats = await res.json();
-        allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
-        if (!allChats.find(c => c.id === 'favorites')) {
-            allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true });
-        }
-        groups.forEach(g => {
-            if (g.members.includes(currentUser)) {
-                allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true, creator: g.creator });
-            }
-        });
-        channels.forEach(c => {
-            if (c.members.includes(currentUser)) {
-                allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true, creator: c.creator });
-            }
-        });
-    }
-
-    function renderChats() {
-        const container = document.getElementById('chatsList');
-        if (!container) return;
-        container.innerHTML = '';
-        allChats.forEach(chat => {
-            const div = document.createElement('div');
-            div.className = 'chat-item';
-            div.innerHTML = `
-                <div class="chat-info">
-                    <span>${chat.avatar || '💬'}</span>
-                    <span>${chat.name} ${mutedChats[chat.id] ? '🔇' : ''}</span>
-                </div>
-            `;
-            div.onclick = () => {
-                currentChat = chat.id;
-                currentChatName = chat.name;
-                document.getElementById('chatTitle').innerText = chat.name;
-                loadMessages();
-                socket.emit('join', currentChat);
-                replyTo = null;
-                document.getElementById('replyIndicator').innerText = '';
-                document.getElementById('cancelReplyBtn').style.display = 'none';
-            };
-            container.appendChild(div);
-        });
-    }
-
-    async function loadMessages() {
-        const res = await fetch(`/messages/${currentChat}`);
-        messagesData[currentChat] = await res.json();
-        renderMessages();
     }
 
     renderAuth();
