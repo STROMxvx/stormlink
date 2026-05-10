@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>StormLink</title>
     <style>
+        /* Стили такие же, как были (не менялись) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: radial-gradient(circle, #0a0f1e, #03050a);
@@ -17,7 +17,6 @@
             color: white;
             overflow: hidden;
         }
-
         .messenger {
             width: 1300px;
             height: 90vh;
@@ -29,7 +28,6 @@
             overflow: hidden;
             backdrop-filter: blur(20px);
         }
-
         .sidebar {
             width: 300px;
             background: rgba(2,8,18,0.9);
@@ -41,7 +39,6 @@
             overflow-y: auto;
             transition: transform 0.2s ease;
         }
-
         body.mobile-mode .messenger {
             width: 100%;
             height: 100vh;
@@ -88,7 +85,6 @@
         .burger-btn {
             display: none;
         }
-
         .user-info {
             display: flex;
             align-items: center;
@@ -463,6 +459,7 @@
     let audioChunks = [];
     let isRecording = false;
 
+    // Сохранения
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -483,7 +480,7 @@
         return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}, ${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
     }
 
-    // ✅ ВАЛИДАЦИЯ БЕЗ @
+    // Валидация логина (без @)
     function validateLogin(login) {
         const regex = /^[a-zA-Z0-9_+\-~]+$/;
         return regex.test(login) && login.length >= 3 && login.length <= 20;
@@ -557,12 +554,82 @@
         };
     }
 
-    function getAvatarForUser(login) {
-        const avatar = userAvatars[login];
-        if (avatar) return `<div class="message-avatar" style="background-image:url(${avatar}); background-size:cover;"></div>`;
-        return `<div class="message-avatar">⚡</div>`;
+    // ========== ПРОФИЛЬ СВОЙ (РЕДАКТИРОВАНИЕ) ==========
+    function showMyProfile() {
+        const avatarUrl = userAvatars[currentUser] || null;
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="profile-card">
+                <div class="avatar" style="width:80px; height:80px; font-size:40px; margin:0 auto; ${avatarUrl ? `background-image:url(${avatarUrl}); background-size:cover;` : ''}">${!avatarUrl ? '⚡' : ''}</div>
+                <h2>${currentUser}</h2>
+                <div><strong>📅 Дата рождения:</strong> ${currentUserData?.birthdate || 'не указана'}</div>
+                <div><strong>📝 О себе:</strong> ${currentUserData?.about || 'не указано'}</div>
+                <button id="editProfileBtn" class="auth-btn" style="margin-top:12px;">✏️ Редактировать</button>
+                <button id="closeProfileBtn" class="auth-btn" style="margin-top:12px;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#editProfileBtn').onclick = () => { modal.remove(); showEditProfileModal(); };
+        modal.querySelector('#closeProfileBtn').onclick = () => modal.remove();
     }
 
+    function showEditProfileModal() {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        const avatarUrl = userAvatars[currentUser] || null;
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h3>✏️ Редактировать профиль</h3>
+                <div style="display:flex; justify-content:center; margin:10px;">
+                    <div id="avatarPreview" class="avatar" style="width:80px; height:80px; font-size:40px; ${avatarUrl ? `background-image:url(${avatarUrl}); background-size:cover;` : ''}">${!avatarUrl ? '⚡' : ''}</div>
+                </div>
+                <button id="changeAvatarBtn" class="auth-btn">📷 Сменить фото</button>
+                <input type="date" id="editBirthdate" value="${currentUserData?.birthdate || ''}">
+                <textarea id="editAbout" rows="3" placeholder="О себе">${currentUserData?.about || ''}</textarea>
+                <div class="modal-buttons">
+                    <button id="saveProfileBtn">💾 Сохранить</button>
+                    <button id="cancelEditBtn">Отмена</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#changeAvatarBtn').onclick = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = 'image/*';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file && file.size <= 4 * 1024 * 1024) {
+                    const reader = new FileReader();
+                    reader.onload = (ev) => {
+                        userAvatars[currentUser] = ev.target.result;
+                        saveAvatars();
+                        const preview = modal.querySelector('#avatarPreview');
+                        preview.style.backgroundImage = `url(${ev.target.result})`;
+                        preview.style.backgroundSize = 'cover';
+                        preview.innerHTML = '';
+                        showToast('Фото обновлено');
+                    };
+                    reader.readAsDataURL(file);
+                } else if (file) showToast('Файл больше 4 МБ');
+            };
+            input.click();
+        };
+        modal.querySelector('#saveProfileBtn').onclick = async () => {
+            const updatedData = {
+                birthdate: modal.querySelector('#editBirthdate').value,
+                about: modal.querySelector('#editAbout').value
+            };
+            currentUserData = { ...currentUserData, ...updatedData };
+            await fetch('/update-profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: currentUser, ...updatedData }) });
+            showToast('Профиль обновлён');
+            modal.remove();
+        };
+        modal.querySelector('#cancelEditBtn').onclick = () => modal.remove();
+    }
+
+    // ========== ПРОФИЛЬ ДРУГОГО ПОЛЬЗОВАТЕЛЯ ==========
     function showUserProfile(login) {
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
             .then(r => r.json())
@@ -606,6 +673,12 @@
                 };
                 modal.querySelector('#closeBtn').onclick = () => modal.remove();
             });
+    }
+
+    function getAvatarForUser(login) {
+        const avatar = userAvatars[login];
+        if (avatar) return `<div class="message-avatar" style="background-image:url(${avatar}); background-size:cover;"></div>`;
+        return `<div class="message-avatar">⚡</div>`;
     }
 
     function renderMessages() {
@@ -818,9 +891,11 @@
         });
         const existingTemp = document.getElementById('temp-search-result');
         if (existingTemp) existingTemp.remove();
-        if (query.startsWith('@')) {
-            const searchLogin = query.substring(1);
-            fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: searchLogin }) })
+        
+        // Поиск по логину (пользователи, группы, каналы)
+        if (query.length > 0) {
+            // Поиск пользователя
+            fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
                 .then(r => r.json())
                 .then(data => {
                     if (data.found) {
@@ -828,11 +903,16 @@
                         userDiv.id = 'temp-search-result';
                         userDiv.className = 'chat-item search-result-item';
                         userDiv.innerHTML = `<div class="chat-info"><span>👤</span><span>${data.login}</span></div>`;
-                        userDiv.onclick = () => { showUserProfile(data.login); searchInput.value = ''; filterChats(); };
+                        userDiv.onclick = () => {
+                            showUserProfile(data.login);
+                            searchInput.value = '';
+                            filterChats();
+                        };
                         container.prepend(userDiv);
                     }
                 });
-            const foundGroup = groups.find(g => g.login === query.substring(1));
+            // Поиск группы
+            const foundGroup = groups.find(g => g.login === query);
             if (foundGroup) {
                 const groupDiv = document.createElement('div');
                 groupDiv.id = 'temp-search-result';
@@ -852,7 +932,8 @@
                 };
                 container.prepend(groupDiv);
             }
-            const foundChannel = channels.find(c => c.login === query.substring(1));
+            // Поиск канала
+            const foundChannel = channels.find(c => c.login === query);
             if (foundChannel) {
                 const channelDiv = document.createElement('div');
                 channelDiv.id = 'temp-search-result';
@@ -929,7 +1010,6 @@
         let chats = await res.json();
         allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
         const favoritesKey = `favorites_${currentUser}`;
-        let userFavorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
         if (!allChats.find(c => c.id === 'favorites')) allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true });
         groups.forEach(g => { if (g.members.includes(currentUser)) allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true, creator: g.creator }); });
         channels.forEach(c => { if (c.members.includes(currentUser)) allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true, creator: c.creator }); });
@@ -1065,7 +1145,7 @@
             }
         };
         document.getElementById('msgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('sendBtn').click(); });
-        document.getElementById('profileBtn').onclick = () => showUserProfile(currentUser);
+        document.getElementById('profileBtn').onclick = showMyProfile;
         document.getElementById('createGroupBtn').onclick = showCreateGroupModal;
         document.getElementById('createChannelBtn').onclick = showCreateChannelModal;
         document.getElementById('headerDotsBtn').onclick = () => {
