@@ -50,16 +50,8 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .icon-item:hover {
-            background: rgba(0,255,255,0.3);
-            transform: scale(1.05);
-            box-shadow: 0 0 10px cyan;
-        }
-        .icon-item.active {
-            background: #0af;
-            color: black;
-            box-shadow: 0 0 15px cyan;
-        }
+        .icon-item:hover { background: rgba(0,255,255,0.3); transform: scale(1.05); box-shadow: 0 0 10px cyan; }
+        .icon-item.active { background: #0af; color: black; box-shadow: 0 0 15px cyan; }
         .content-panel {
             width: 340px;
             background: rgba(2,8,18,0.5);
@@ -67,36 +59,10 @@
             display: flex;
             flex-direction: column;
         }
-        .search-header {
-            padding: 16px;
-            border-bottom: 1px solid #0af;
-        }
-        .search-header input {
-            width: 100%;
-            padding: 10px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-            outline: none;
-        }
-        .section-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(0,255,255,0.2);
-            font-size: 14px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #0af;
-        }
-        .list-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .search-header { padding: 16px; border-bottom: 1px solid #0af; }
+        .search-header input { width: 100%; padding: 10px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; outline: none; }
+        .section-header { padding: 12px 16px; border-bottom: 1px solid rgba(0,255,255,0.2); font-size: 14px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #0af; }
+        .list-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
         .list-item {
             background: rgba(0,255,255,0.05);
             border-radius: 24px;
@@ -107,22 +73,8 @@
             cursor: pointer;
             transition: 0.2s;
         }
-        .list-item:hover {
-            background: rgba(0,255,255,0.15);
-            border: 1px solid #0af;
-        }
-        .list-avatar {
-            width: 44px;
-            height: 44px;
-            background: #0af;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 22px;
-            background-size: cover;
-            background-position: center;
-        }
+        .list-item:hover { background: rgba(0,255,255,0.15); border: 1px solid #0af; }
+        .list-avatar { width: 44px; height: 44px; background: #0af; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; background-size: cover; background-position: center; }
         .list-info { flex: 1; }
         .list-title { font-size: 16px; font-weight: bold; }
         .list-sub { font-size: 11px; opacity: 0.6; }
@@ -138,38 +90,11 @@
             font-size: 14px;
         }
         .add-btn:hover { background: rgba(0,200,255,0.4); }
-        .chat-panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            background: rgba(6,12,24,0.4);
-        }
-        .chat-header {
-            padding: 16px 20px;
-            border-bottom: 1px solid #0af;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            background: rgba(2,8,18,0.7);
-        }
+        .chat-panel { flex: 1; display: flex; flex-direction: column; background: rgba(6,12,24,0.4); }
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid #0af; display: flex; justify-content: space-between; align-items: center; background: rgba(2,8,18,0.7); }
         .chat-title { font-size: 18px; font-weight: bold; cursor: pointer; }
-        .chat-header-dots {
-            background: none;
-            border: none;
-            color: cyan;
-            font-size: 28px;
-            cursor: pointer;
-            padding: 4px 12px;
-        }
-        .chat-messages {
-            flex: 1;
-            padding: 16px;
-            overflow-y: auto;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-            position: relative;
-        }
+        .chat-header-dots { background: none; border: none; color: cyan; font-size: 28px; cursor: pointer; padding: 4px 12px; }
+        .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; position: relative; }
         .search-bar-container {
             position: sticky;
             top: 0;
@@ -183,27 +108,9 @@
             gap: 12px;
             z-index: 10;
         }
-        .search-bar-container input {
-            flex: 1;
-            padding: 8px 16px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-            outline: none;
-        }
-        .search-nav {
-            display: flex;
-            gap: 8px;
-            align-items: center;
-        }
-        .search-nav button {
-            background: #0af;
-            border: none;
-            border-radius: 20px;
-            padding: 6px 12px;
-            cursor: pointer;
-        }
+        .search-bar-container input { flex: 1; padding: 8px 16px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; outline: none; }
+        .search-nav { display: flex; gap: 8px; align-items: center; }
+        .search-nav button { background: #0af; border: none; border-radius: 20px; padding: 6px 12px; cursor: pointer; }
         .message {
             max-width: 70%;
             background: rgba(0,255,255,0.1);
@@ -214,51 +121,14 @@
             align-items: flex-start;
             transition: 0.2s;
         }
-        .message.highlight {
-            background: #ffcc00 !important;
-            color: black !important;
-            box-shadow: 0 0 10px #ffcc00;
-        }
-        .message.current-highlight {
-            background: #ff9900 !important;
-            color: black !important;
-            box-shadow: 0 0 15px #ff9900;
-            border: 1px solid white;
-        }
-        .message-avatar {
-            width: 36px;
-            height: 36px;
-            background: #0af;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            background-size: cover;
-            cursor: pointer;
-            flex-shrink: 0;
-        }
+        .message.highlight { background: #ffcc00 !important; color: black !important; box-shadow: 0 0 10px #ffcc00; }
+        .message.current-highlight { background: #ff9900 !important; color: black !important; box-shadow: 0 0 15px #ff9900; border: 1px solid white; }
+        .message-avatar { width: 36px; height: 36px; background: #0af; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; background-size: cover; cursor: pointer; flex-shrink: 0; }
         .message-content { flex: 1; }
-        .my-message {
-            align-self: flex-end;
-            background: #0af;
-            color: black;
-        }
-        .message-actions {
-            display: none;
-            gap: 12px;
-            margin-top: 6px;
-            font-size: 12px;
-            justify-content: flex-end;
-        }
+        .my-message { align-self: flex-end; background: #0af; color: black; }
+        .message-actions { display: none; gap: 12px; margin-top: 6px; font-size: 12px; justify-content: flex-end; }
         .message:hover .message-actions { display: flex; }
-        .message-actions span {
-            cursor: pointer;
-            opacity: 0.7;
-            background: rgba(0,0,0,0.3);
-            padding: 2px 6px;
-            border-radius: 16px;
-        }
+        .message-actions span { cursor: pointer; opacity: 0.7; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 16px; }
         .message-actions span:hover { opacity: 1; background: cyan; color: black; }
         .chat-input {
             display: flex;
@@ -268,42 +138,29 @@
             align-items: center;
             background: rgba(2,8,18,0.7);
         }
-        .chat-input input {
-            flex: 1;
-            padding: 10px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-            outline: none;
-        }
-        .chat-input button {
-            background: none;
-            border: none;
-            font-size: 24px;
-            cursor: pointer;
-            color: #0af;
-            padding: 0 10px;
-        }
-        .reply-indicator {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-bottom: 4px;
-            border-left: 2px solid cyan;
-            padding-left: 8px;
-        }
-        .voice-recording {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            padding: 8px 16px;
-            flex: 1;
-        }
+        .chat-input input { flex: 1; padding: 10px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; outline: none; }
+        .chat-input button { background: none; border: none; font-size: 24px; cursor: pointer; color: #0af; padding: 0 10px; }
+        .reply-indicator { font-size: 12px; opacity: 0.7; margin-bottom: 4px; border-left: 2px solid cyan; padding-left: 8px; }
+        .voice-recording { display: flex; align-items: center; gap: 12px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; padding: 8px 16px; flex: 1; }
         .voice-wave { flex: 1; height: 30px; background: rgba(0,255,255,0.2); border-radius: 20px; overflow: hidden; }
         .voice-wave-fill { width: 0%; height: 100%; background: cyan; transition: width 0.1s linear; }
+        .modal-confirm {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #0c1322;
+            border: 2px solid #0af;
+            border-radius: 28px;
+            padding: 28px;
+            width: 320px;
+            text-align: center;
+            z-index: 2000;
+            box-shadow: 0 0 40px rgba(0,255,255,0.3);
+        }
+        .modal-confirm h3 { margin-bottom: 20px; }
+        .modal-confirm-buttons { display: flex; gap: 16px; justify-content: center; margin-top: 20px; }
+        .modal-confirm-buttons button { padding: 8px 24px; background: #0af; border: none; border-radius: 40px; cursor: pointer; font-weight: bold; }
         .modal-toast {
             position: fixed;
             top: 50%;
@@ -331,15 +188,7 @@
             width: 380px;
             text-align: center;
         }
-        .modal-box input, .modal-box textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 12px 0;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-        }
+        .modal-box input, .modal-box textarea { width: 100%; padding: 12px; margin: 12px 0; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; }
         .modal-buttons { display: flex; gap: 12px; margin-top: 20px; }
         .modal-buttons button { flex: 1; padding: 10px; background: #0af; border: none; border-radius: 40px; cursor: pointer; }
         .profile-card {
@@ -350,14 +199,7 @@
             width: 340px;
             text-align: center;
         }
-        .emoji-picker {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-            justify-content: center;
-            margin: 12px 0;
-            font-size: 28px;
-        }
+        .emoji-picker { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; font-size: 28px; }
         .emoji-option { cursor: pointer; padding: 4px 8px; border-radius: 12px; }
         .emoji-option:hover { background: #0af; }
         .auth-box {
@@ -368,24 +210,9 @@
             width: 350px;
             text-align: center;
         }
-        .auth-box input, .auth-box textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-        }
+        .auth-box input, .auth-box textarea { width: 100%; padding: 12px; margin: 10px 0; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; }
         .auth-buttons { display: flex; gap: 10px; margin: 20px 0; }
-        .auth-btn {
-            background: #0af;
-            border: none;
-            border-radius: 40px;
-            padding: 12px;
-            cursor: pointer;
-            font-weight: bold;
-        }
+        .auth-btn { background: #0af; border: none; border-radius: 40px; padding: 12px; cursor: pointer; font-weight: bold; }
         .burger-btn { display: none; }
         body.mobile-mode .messenger { width: 100%; height: 100vh; border-radius: 0; }
         body.mobile-mode .content-panel {
@@ -399,21 +226,7 @@
             transition: transform 0.2s;
         }
         body.mobile-mode .content-panel.open { transform: translateX(0); }
-        body.mobile-mode .burger-btn {
-            display: block;
-            position: fixed;
-            top: 15px;
-            left: 15px;
-            z-index: 1001;
-            background: #0af;
-            border: none;
-            border-radius: 50%;
-            width: 45px;
-            height: 45px;
-            font-size: 24px;
-            cursor: pointer;
-            color: black;
-        }
+        body.mobile-mode .burger-btn { display: block; position: fixed; top: 15px; left: 15px; z-index: 1001; background: #0af; border: none; border-radius: 50%; width: 45px; height: 45px; font-size: 24px; cursor: pointer; color: black; }
         .chat-menu {
             position: fixed;
             background: #0a1428;
@@ -422,22 +235,10 @@
             padding: 8px;
             z-index: 200;
         }
-        .chat-menu div {
-            padding: 8px 16px;
-            cursor: pointer;
-            border-radius: 12px;
-        }
+        .chat-menu div { padding: 8px 16px; cursor: pointer; border-radius: 12px; }
         .chat-menu div:hover { background: #0af; color: black; }
         .media-content { max-width: 200px; max-height: 150px; border-radius: 12px; cursor: pointer; }
-        .file-content {
-            display: inline-flex;
-            align-items: center;
-            gap: 8px;
-            background: rgba(0,0,0,0.3);
-            padding: 6px 12px;
-            border-radius: 20px;
-            cursor: pointer;
-        }
+        .file-content { display: inline-flex; align-items: center; gap: 8px; background: rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 20px; cursor: pointer; }
         .friends-icon {
             position: fixed;
             bottom: 20px;
@@ -453,15 +254,19 @@
             z-index: 25;
             box-shadow: 0 0 15px cyan;
         }
-        .subgroup-item {
-            margin-left: 28px;
-            padding: 6px;
-            font-size: 13px;
-            border-radius: 16px;
-            background: rgba(0,255,255,0.05);
-            cursor: pointer;
-        }
+        .subgroup-item { margin-left: 28px; padding: 6px; font-size: 13px; border-radius: 16px; background: rgba(0,255,255,0.05); cursor: pointer; }
         .subgroup-item:hover { background: rgba(0,255,255,0.15); }
+        .prefix-input {
+            display: flex;
+            align-items: center;
+            background: #010a1a;
+            border: 1px solid #0af;
+            border-radius: 40px;
+            padding: 0 12px;
+            margin: 12px 0;
+        }
+        .prefix-input span { color: #0af; font-size: 16px; font-weight: bold; margin-right: 4px; }
+        .prefix-input input { flex: 1; background: transparent; border: none; padding: 12px 0; color: white; outline: none; }
     </style>
 </head>
 <body>
@@ -510,6 +315,21 @@
         toast.innerHTML = `<h3>${msg}</h3><button onclick="this.parentElement.remove()" class="auth-btn">ОК</button>`;
         document.body.appendChild(toast);
         setTimeout(() => toast.remove(), 3000);
+    }
+
+    function showConfirmDialog(title, onConfirm) {
+        const modal = document.createElement('div');
+        modal.className = 'modal-confirm';
+        modal.innerHTML = `
+            <h3>${title}</h3>
+            <div class="modal-confirm-buttons">
+                <button id="confirmYes">Да</button>
+                <button id="confirmNo">Нет</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        document.getElementById('confirmYes').onclick = () => { onConfirm(); modal.remove(); };
+        document.getElementById('confirmNo').onclick = () => modal.remove();
     }
 
     async function renderAuth() {
@@ -985,10 +805,10 @@
         if (!container) return;
         const msgs = messagesData[currentChat] || [];
         if (msgs.length === 0) {
-            container.innerHTML = '<div style="text-align:center; opacity:0.5;">💬 Начните общение</div>';
+            container.innerHTML = '<div class="search-bar-container" id="searchBar" style="display:none;"><input type="text" id="messageSearchInput" placeholder="Поиск в чате..."><div class="search-nav"><span id="searchCount">0</span><button id="searchPrevBtn">▲</button><button id="searchNextBtn">▼</button><button id="searchCloseBtn">✖</button></div></div><div style="text-align:center; opacity:0.5;">💬 Начните общение</div>';
             return;
         }
-        container.innerHTML = msgs.map((msg, idx) => {
+        container.innerHTML = `<div class="search-bar-container" id="searchBar" style="display:none;"><input type="text" id="messageSearchInput" placeholder="Поиск в чате..."><div class="search-nav"><span id="searchCount">0</span><button id="searchPrevBtn">▲</button><button id="searchNextBtn">▼</button><button id="searchCloseBtn">✖</button></div></div>` + msgs.map((msg, idx) => {
             const avatarHtml = getAvatarForUser(msg.from);
             return `
                 <div class="message ${msg.from === currentUser ? 'my-message' : ''}" data-idx="${idx}">
@@ -1024,11 +844,75 @@
             el.onclick = () => {
                 const idx = el.closest('.message').dataset.idx;
                 const msg = messagesData[currentChat][idx];
-                if (msg && msg.from === currentUser && confirm('Удалить сообщение?')) socket.emit('deleteMessage', { chatId: currentChat, messageIndex: idx });
+                if (msg && msg.from === currentUser) {
+                    showConfirmDialog('Удалить сообщение?', () => {
+                        socket.emit('deleteMessage', { chatId: currentChat, messageIndex: idx });
+                    });
+                } else showToast('Можно удалять только свои сообщения');
             };
         });
+        const searchMsgInput = document.getElementById('messageSearchInput');
+        if (searchMsgInput) searchMsgInput.oninput = performSearchInMessages;
+        document.getElementById('searchPrevBtn')?.addEventListener('click', () => navigateSearch(-1));
+        document.getElementById('searchNextBtn')?.addEventListener('click', () => navigateSearch(1));
+        document.getElementById('searchCloseBtn')?.addEventListener('click', closeSearch);
         container.scrollTop = container.scrollHeight;
     }
+
+    function performSearchInMessages() {
+        const query = document.getElementById('messageSearchInput')?.value.toLowerCase();
+        const searchCountSpan = document.getElementById('searchCount');
+        if (!query) {
+            clearAllHighlights();
+            if (searchCountSpan) searchCountSpan.innerText = '0';
+            return;
+        }
+        const messages = document.querySelectorAll('.chat-messages .message');
+        clearAllHighlights();
+        currentMatches = [];
+        messages.forEach(msg => {
+            const text = msg.innerText.toLowerCase();
+            if (text.includes(query)) {
+                msg.classList.add('highlight');
+                currentMatches.push(msg);
+            }
+        });
+        if (searchCountSpan) searchCountSpan.innerText = currentMatches.length.toString();
+        if (currentMatches.length > 0) {
+            currentMatchIndex = 0;
+            highlightCurrentMatch();
+        } else currentMatchIndex = -1;
+    }
+
+    function clearAllHighlights() {
+        document.querySelectorAll('.chat-messages .message').forEach(msg => {
+            msg.classList.remove('highlight', 'current-highlight');
+        });
+        currentMatches = [];
+        currentMatchIndex = -1;
+    }
+
+    function highlightCurrentMatch() {
+        document.querySelectorAll('.chat-messages .message').forEach(msg => msg.classList.remove('current-highlight'));
+        if (currentMatchIndex >= 0 && currentMatches[currentMatchIndex]) {
+            const currentMsg = currentMatches[currentMatchIndex];
+            currentMsg.classList.add('current-highlight');
+            currentMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            const searchCountSpan = document.getElementById('searchCount');
+            if (searchCountSpan) searchCountSpan.innerText = `${currentMatchIndex + 1}/${currentMatches.length}`;
+        } else if (currentMatches.length > 0 && searchCountSpan) searchCountSpan.innerText = currentMatches.length.toString();
+    }
+
+    function navigateSearch(delta) {
+        if (currentMatches.length === 0) return;
+        currentMatchIndex += delta;
+        if (currentMatchIndex < 0) currentMatchIndex = currentMatches.length - 1;
+        if (currentMatchIndex >= currentMatches.length) currentMatchIndex = 0;
+        highlightCurrentMatch();
+    }
+
+    function openSearch() { document.getElementById('searchBar').style.display = 'flex'; document.getElementById('messageSearchInput').focus(); }
+    function closeSearch() { document.getElementById('searchBar').style.display = 'none'; clearAllHighlights(); document.getElementById('messageSearchInput').value = ''; document.getElementById('searchCount').innerText = '0'; }
 
     function sendMessage() {
         const input = document.getElementById('msgInput');
@@ -1208,13 +1092,14 @@
         menu.style.left = rect.left - 120 + 'px';
         menu.style.top = rect.bottom + 5 + 'px';
         menu.querySelector('#menuClear').onclick = () => {
-            if (confirm(`Очистить чат "${currentChatName}"?`)) {
+            showConfirmDialog(`Очистить чат "${currentChatName}"?`, () => {
                 if (currentChat === 'favorites') {
                     localStorage.setItem(`favorites_${currentUser}`, JSON.stringify([]));
                     messagesData['favorites'] = [];
                 } else messagesData[currentChat] = [];
                 renderMessages();
-            }
+                menu.remove();
+            });
             menu.remove();
         };
         if (isGroup && isCreator && menu.querySelector('#menuAddSubgroup')) menu.querySelector('#menuAddSubgroup').onclick = () => { showAddSubgroupModal(currentChat, currentChatName); menu.remove(); };
@@ -1225,101 +1110,40 @@
             renderLeftPanelContent();
             menu.remove();
         };
-        if (!isFavorites && menu.querySelector('#menuDelete')) menu.querySelector('#menuDelete').onclick = () => { deleteChat(currentChat, currentChatName, false); menu.remove(); };
+        if (!isFavorites && menu.querySelector('#menuDelete')) menu.querySelector('#menuDelete').onclick = () => {
+            showConfirmDialog(`Удалить чат "${currentChatName}"?`, () => {
+                deleteChat(currentChat, currentChatName, false);
+                menu.remove();
+            });
+            menu.remove();
+        };
         setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 10);
     }
 
     function deleteChat(chatId, chatName, leaveOnly) {
         if (chatId === 'favorites') { showToast('Избранное нельзя удалить'); return; }
-        if (confirm(leaveOnly ? `Выйти из чата "${chatName}"?` : `Удалить чат "${chatName}"?`)) {
-            if (leaveOnly) {
-                const group = groups.find(g => g.id == chatId);
-                if (group) group.members = group.members.filter(m => m !== currentUser);
-                const channel = channels.find(c => c.id == chatId);
-                if (channel) channel.members = channel.members.filter(m => m !== currentUser);
-                saveGroups(); saveChannels();
-            } else {
-                groups = groups.filter(g => g.id != chatId);
-                channels = channels.filter(c => c.id != chatId);
-                saveGroups(); saveChannels();
-            }
-            allChats = allChats.filter(c => c.id !== chatId);
-            delete messagesData[chatId];
-            renderLeftPanelContent();
-            if (currentChat === chatId) {
-                currentChat = 'favorites';
-                currentChatName = 'Избранное';
-                document.getElementById('chatTitle').innerText = 'Избранное';
-                loadMessages();
-                socket.emit('join', currentChat);
-            }
-            showToast(leaveOnly ? `Вы вышли из ${chatName}` : `Чат ${chatName} удалён`);
+        if (leaveOnly) {
+            const group = groups.find(g => g.id == chatId);
+            if (group) group.members = group.members.filter(m => m !== currentUser);
+            const channel = channels.find(c => c.id == chatId);
+            if (channel) channel.members = channel.members.filter(m => m !== currentUser);
+            saveGroups(); saveChannels();
+        } else {
+            groups = groups.filter(g => g.id != chatId);
+            channels = channels.filter(c => c.id != chatId);
+            saveGroups(); saveChannels();
         }
-    }
-
-    function performSearchInMessages() {
-        const query = document.getElementById('messageSearchInput')?.value.toLowerCase();
-        const searchCountSpan = document.getElementById('searchCount');
-        if (!query) {
-            clearAllHighlights();
-            if (searchCountSpan) searchCountSpan.innerText = '0';
-            return;
+        allChats = allChats.filter(c => c.id !== chatId);
+        delete messagesData[chatId];
+        renderLeftPanelContent();
+        if (currentChat === chatId) {
+            currentChat = 'favorites';
+            currentChatName = 'Избранное';
+            document.getElementById('chatTitle').innerText = 'Избранное';
+            loadMessages();
+            socket.emit('join', currentChat);
         }
-        const messages = document.querySelectorAll('.chat-messages .message');
-        clearAllHighlights();
-        currentMatches = [];
-        messages.forEach(msg => {
-            const text = msg.innerText.toLowerCase();
-            if (text.includes(query)) {
-                msg.classList.add('highlight');
-                currentMatches.push(msg);
-            }
-        });
-        if (searchCountSpan) searchCountSpan.innerText = currentMatches.length.toString();
-        if (currentMatches.length > 0) {
-            currentMatchIndex = 0;
-            highlightCurrentMatch();
-        } else currentMatchIndex = -1;
-    }
-
-    function clearAllHighlights() {
-        document.querySelectorAll('.chat-messages .message').forEach(msg => {
-            msg.classList.remove('highlight', 'current-highlight');
-        });
-        currentMatches = [];
-        currentMatchIndex = -1;
-    }
-
-    function highlightCurrentMatch() {
-        document.querySelectorAll('.chat-messages .message').forEach(msg => msg.classList.remove('current-highlight'));
-        if (currentMatchIndex >= 0 && currentMatches[currentMatchIndex]) {
-            const currentMsg = currentMatches[currentMatchIndex];
-            currentMsg.classList.add('current-highlight');
-            currentMsg.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            const searchCountSpan = document.getElementById('searchCount');
-            if (searchCountSpan) searchCountSpan.innerText = `${currentMatchIndex + 1}/${currentMatches.length}`;
-        } else if (currentMatches.length > 0 && searchCountSpan) searchCountSpan.innerText = currentMatches.length.toString();
-    }
-
-    function navigateSearch(delta) {
-        if (currentMatches.length === 0) return;
-        currentMatchIndex += delta;
-        if (currentMatchIndex < 0) currentMatchIndex = currentMatches.length - 1;
-        if (currentMatchIndex >= currentMatches.length) currentMatchIndex = 0;
-        highlightCurrentMatch();
-    }
-
-    function openSearch() {
-        document.getElementById('searchBar').style.display = 'flex';
-        document.getElementById('messageSearchInput').focus();
-    }
-
-    function closeSearch() {
-        document.getElementById('searchBar').style.display = 'none';
-        clearAllHighlights();
-        document.getElementById('messageSearchInput').value = '';
-        const searchCountSpan = document.getElementById('searchCount');
-        if (searchCountSpan) searchCountSpan.innerText = '0';
+        showToast(leaveOnly ? `Вы вышли из ${chatName}` : `Чат ${chatName} удалён`);
     }
 
     async function startMessenger() {
@@ -1367,17 +1191,7 @@
                         <span class="chat-title" id="chatTitle">${currentChatName}</span>
                         <button class="chat-header-dots" id="chatMenuBtn">⋯</button>
                     </div>
-                    <div class="chat-messages" id="messagesList">
-                        <div id="searchBar" class="search-bar-container" style="display:none;">
-                            <input type="text" id="messageSearchInput" placeholder="Поиск в чате...">
-                            <div class="search-nav">
-                                <span id="searchCount">0</span>
-                                <button id="searchPrevBtn">▲</button>
-                                <button id="searchNextBtn">▼</button>
-                                <button id="searchCloseBtn">✖</button>
-                            </div>
-                        </div>
-                    </div>
+                    <div class="chat-messages" id="messagesList"></div>
                     <div id="replyIndicator" style="padding:0 16px; display:flex; justify-content:space-between;">
                         <span></span>
                         <button id="cancelReplyBtn" style="display:none;">✖ Отмена</button>
@@ -1415,12 +1229,6 @@
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerHTML = '<span></span><button id="cancelReplyBtn" style="display:none;">✖ Отмена</button>'; };
         document.getElementById('msgInput').addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
         document.getElementById('chatMenuBtn').onclick = showChatMenu;
-
-        const searchMsgInput = document.getElementById('messageSearchInput');
-        if (searchMsgInput) searchMsgInput.oninput = performSearchInMessages;
-        document.getElementById('searchPrevBtn')?.addEventListener('click', () => navigateSearch(-1));
-        document.getElementById('searchNextBtn')?.addEventListener('click', () => navigateSearch(1));
-        document.getElementById('searchCloseBtn')?.addEventListener('click', closeSearch);
 
         renderLeftPanelContent();
         loadMessages();
