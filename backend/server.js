@@ -3,6 +3,7 @@ const http = require('http');
 const socketIo = require('socket.io');
 const bcrypt = require('bcryptjs');
 const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const server = http.createServer(app);
@@ -15,11 +16,37 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
+// Загрузка и сохранение данных в файл
+const USERS_FILE = path.join(__dirname, 'users.json');
+const MESSAGES_FILE = path.join(__dirname, 'messages.json');
+const CHATS_FILE = path.join(__dirname, 'chats.json');
+
 let users = {};
 let messages = {};
 let globalChats = [
     { id: 'favorites', name: 'Избранное', avatar: '⭐', theme: 'личное', members: [] }
 ];
+
+// Загружаем данные из файлов
+if (fs.existsSync(USERS_FILE)) {
+    users = JSON.parse(fs.readFileSync(USERS_FILE));
+}
+if (fs.existsSync(MESSAGES_FILE)) {
+    messages = JSON.parse(fs.readFileSync(MESSAGES_FILE));
+}
+if (fs.existsSync(CHATS_FILE)) {
+    globalChats = JSON.parse(fs.readFileSync(CHATS_FILE));
+}
+
+function saveUsers() {
+    fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2));
+}
+function saveMessages() {
+    fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2));
+}
+function saveChats() {
+    fs.writeFileSync(CHATS_FILE, JSON.stringify(globalChats, null, 2));
+}
 
 app.post('/register', async (req, res) => {
     const { login, password, name, surname, birthdate, about, favoriteGames } = req.body;
@@ -34,6 +61,7 @@ app.post('/register', async (req, res) => {
         avatar: null,
         chats: ['favorites']
     };
+    saveUsers();
     res.json({ success: true });
 });
 
@@ -58,6 +86,7 @@ app.post('/update-profile', async (req, res) => {
         if (surname !== undefined) users[login].surname = surname;
         if (birthdate !== undefined) users[login].birthdate = birthdate;
         if (about !== undefined) users[login].about = about;
+        saveUsers();
         res.json({ success: true });
     } else {
         res.json({ error: 'Пользователь не найден' });
@@ -82,6 +111,9 @@ app.post('/create-chat', (req, res) => {
             users[creator].chats.push(chatId);
         }
     }
+    saveChats();
+    saveMessages();
+    saveUsers();
     res.json({ chatId });
 });
 
@@ -93,6 +125,8 @@ app.post('/add-member', (req, res) => {
         if (users[memberLogin] && !users[memberLogin].chats.includes(chatId)) {
             users[memberLogin].chats.push(chatId);
         }
+        saveChats();
+        saveUsers();
         res.json({ success: true });
     } else {
         res.json({ error: 'Чат не найден или участник уже добавлен' });
@@ -102,10 +136,11 @@ app.post('/add-member', (req, res) => {
 app.get('/chats', (req, res) => res.json(globalChats));
 app.get('/messages/:chatId', (req, res) => res.json(messages[req.params.chatId] || []));
 
-// ========== ГЛАВНЫЙ ПОИСК ПОЛЬЗОВАТЕЛЯ ==========
+// ПОИСК ПОЛЬЗОВАТЕЛЯ ПО ЛОГИНУ
 app.post('/search-user', (req, res) => {
     const { login } = req.body;
-    console.log('Поиск пользователя:', login);
+    console.log('🔍 Поиск пользователя:', login);
+    console.log('📋 Список пользователей на сервере:', Object.keys(users));
     const user = users[login];
     if (user) {
         res.json({ 
@@ -131,7 +166,6 @@ app.post('/chat-info', (req, res) => {
     }
 });
 
-// Смена логина
 app.post('/change-login', async (req, res) => {
     const { oldLogin, newLogin } = req.body;
     if (!users[oldLogin]) return res.json({ error: 'Пользователь не найден' });
@@ -144,6 +178,8 @@ app.post('/change-login', async (req, res) => {
             return msg;
         });
     }
+    saveUsers();
+    saveMessages();
     res.json({ success: true });
 });
 
@@ -154,11 +190,13 @@ io.on('connection', (socket) => {
         const msg = { from, text, time: time || new Date().toLocaleTimeString() };
         if (!messages[chatId]) messages[chatId] = [];
         messages[chatId].push(msg);
+        saveMessages();
         io.to(chatId).emit('newMessage', msg);
     });
     socket.on('deleteMessage', ({ chatId, messageIndex }) => {
         if (messages[chatId] && messages[chatId][messageIndex]) {
             messages[chatId].splice(messageIndex, 1);
+            saveMessages();
             io.to(chatId).emit('messageDeleted', { chatId, messageIndex });
         }
     });
