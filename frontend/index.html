@@ -477,7 +477,6 @@
     let audioChunks = [];
     let isRecording = false;
 
-    // ========== СОХРАНЕНИЕ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -571,7 +570,6 @@
         };
     }
 
-    // ========== ПРОФИЛИ ==========
     function showGroupProfile(group) {
         const memberCount = group.members.length;
         const membersList = group.members.map(m => `<div class="member-item"><div class="avatar" style="width:24px; height:24px; font-size:12px;">👤</div><span>${m}</span></div>`).join('');
@@ -860,7 +858,6 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
-    // ========== СОЗДАНИЕ ГРУППЫ ==========
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modal = document.createElement('div');
@@ -898,7 +895,6 @@
         modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
     }
 
-    // ========== СОЗДАНИЕ КАНАЛА ==========
     function showCreateChannelModal() {
         let selectedEmoji = '📢';
         const modal = document.createElement('div');
@@ -936,8 +932,8 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК (ГАРАНТИРОВАННО РАБОТАЕТ С ЛЮБЫМ ЛОГИНОМ) ==========
-    function performSearch() {
+    // ========== ГЛАВНАЯ ФУНКЦИЯ ПОИСКА (РАБОТАЕТ) ==========
+    async function performSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('chatsList');
         
@@ -958,32 +954,37 @@
             item.style.display = name.includes(query) ? 'flex' : 'none';
         });
         
-        // Ищем пользователя (через сервер)
-        console.log('Поиск пользователя:', query);
-        fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
-            .then(r => r.json())
-            .then(data => {
-                console.log('Ответ поиска пользователя:', data);
-                if (data.found && data.login !== currentUser) {
-                    const userDiv = document.createElement('div');
-                    userDiv.id = 'temp-search-result';
-                    userDiv.className = 'chat-item search-result-item';
-                    userDiv.innerHTML = `<div class="chat-info"><span>👤</span><span>${data.login}</span></div>`;
-                    userDiv.onclick = () => {
-                        showUserProfile(data.login);
-                        document.getElementById('searchInput').value = '';
-                        performSearch();
-                    };
-                    container.prepend(userDiv);
-                } else if (data.found && data.login === currentUser) {
-                    console.log('Это вы сами, не показываем');
-                } else {
-                    console.log('Пользователь не найден');
-                }
-            })
-            .catch(err => console.error('Ошибка поиска пользователя:', err));
+        // Ищем пользователя через сервер
+        try {
+            const res = await fetch('/search-user', { 
+                method: 'POST', 
+                headers: { 'Content-Type': 'application/json' }, 
+                body: JSON.stringify({ login: query }) 
+            });
+            const data = await res.json();
+            console.log('Результат поиска:', data);
+            
+            if (data.found && data.login !== currentUser) {
+                const userDiv = document.createElement('div');
+                userDiv.id = 'temp-search-result';
+                userDiv.className = 'chat-item search-result-item';
+                userDiv.innerHTML = `<div class="chat-info"><span>👤</span><span>${data.login}</span></div>`;
+                userDiv.onclick = () => {
+                    showUserProfile(data.login);
+                    document.getElementById('searchInput').value = '';
+                    performSearch();
+                };
+                container.prepend(userDiv);
+            } else if (data.found && data.login === currentUser) {
+                console.log('Это вы сами');
+            } else {
+                console.log('Пользователь не найден');
+            }
+        } catch (err) {
+            console.error('Ошибка поиска:', err);
+        }
         
-        // Ищем группу в локальном хранилище
+        // Ищем группу
         const foundGroup = groups.find(g => g.login === query);
         if (foundGroup) {
             const groupDiv = document.createElement('div');
@@ -1008,7 +1009,7 @@
             container.prepend(groupDiv);
         }
         
-        // Ищем канал в локальном хранилище
+        // Ищем канал
         const foundChannel = channels.find(c => c.login === query);
         if (foundChannel) {
             const channelDiv = document.createElement('div');
