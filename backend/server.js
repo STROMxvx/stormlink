@@ -21,7 +21,6 @@ const USERS_FILE = path.join(__dirname, 'users.json');
 const CHATS_FILE = path.join(__dirname, 'chats.json');
 const MESSAGES_FILE = path.join(__dirname, 'messages.json');
 
-// Загрузка данных
 let users = {};
 let globalChats = [];
 let messages = {};
@@ -57,9 +56,8 @@ if (!users['TestUser']) {
     saveUsers();
 }
 
-// Регистрация
 app.post('/register', async (req, res) => {
-    const { login, password, name, surname, birthdate, about } = req.body;
+    const { login, password, name, surname, birthdate, about, favoriteGames } = req.body;
     if (users[login]) return res.json({ error: 'Логин занят' });
     users[login] = {
         password: await bcrypt.hash(password, 10),
@@ -67,7 +65,7 @@ app.post('/register', async (req, res) => {
         surname: surname || '',
         birthdate: birthdate || '',
         about: about || '',
-        favoriteGames: [],
+        favoriteGames: favoriteGames || [],
         avatar: null,
         chats: ['favorites']
     };
@@ -75,7 +73,6 @@ app.post('/register', async (req, res) => {
     res.json({ success: true });
 });
 
-// Логин
 app.post('/login', async (req, res) => {
     const { login, password } = req.body;
     const user = users[login];
@@ -84,7 +81,6 @@ app.post('/login', async (req, res) => {
     res.json({ success: true, login, user: { name: user.name, login: login, surname: user.surname, birthdate: user.birthdate, about: user.about } });
 });
 
-// Обновление профиля
 app.post('/update-profile', async (req, res) => {
     const { login, name, surname, birthdate, about } = req.body;
     if (users[login]) {
@@ -99,7 +95,6 @@ app.post('/update-profile', async (req, res) => {
     }
 });
 
-// Создание чата
 app.post('/create-chat', (req, res) => {
     const { name, avatar, theme, creator, members } = req.body;
     const chatId = 'chat_' + Date.now();
@@ -115,17 +110,14 @@ app.post('/create-chat', (req, res) => {
     res.json({ chatId });
 });
 
-// Получение списка чатов
 app.get('/chats', (req, res) => res.json(globalChats));
-
-// Получение сообщений
 app.get('/messages/:chatId', (req, res) => res.json(messages[req.params.chatId] || []));
 
-// ПОИСК ПОЛЬЗОВАТЕЛЯ (ГЛАВНОЕ)
+// ========== ПОИСК ПОЛЬЗОВАТЕЛЯ (РАБОТАЕТ) ==========
 app.post('/search-user', (req, res) => {
     const { login } = req.body;
-    console.log('🔍 Поиск:', login);
-    console.log('📋 Все пользователи:', Object.keys(users));
+    console.log('🔍 Поиск пользователя:', login);
+    console.log('📋 Все пользователи на сервере:', Object.keys(users));
     const user = users[login];
     if (user) {
         res.json({ found: true, login: login, name: user.name, surname: user.surname, birthdate: user.birthdate, about: user.about });
@@ -134,7 +126,6 @@ app.post('/search-user', (req, res) => {
     }
 });
 
-// Информация о чате
 app.post('/chat-info', (req, res) => {
     const { chatId } = req.body;
     const chat = globalChats.find(c => c.id === chatId);
@@ -145,18 +136,23 @@ app.post('/chat-info', (req, res) => {
     }
 });
 
-// Смена логина
 app.post('/change-login', async (req, res) => {
     const { oldLogin, newLogin } = req.body;
     if (!users[oldLogin]) return res.json({ error: 'Пользователь не найден' });
     if (users[newLogin]) return res.json({ error: 'Логин уже занят' });
     users[newLogin] = { ...users[oldLogin] };
     delete users[oldLogin];
+    for (let chatId in messages) {
+        messages[chatId] = messages[chatId].map(msg => {
+            if (msg.from === oldLogin) msg.from = newLogin;
+            return msg;
+        });
+    }
     saveUsers();
+    saveMessages();
     res.json({ success: true });
 });
 
-// Socket.io
 io.on('connection', (socket) => {
     console.log('✅ Пользователь подключился');
     socket.on('join', (chatId) => { socket.join(chatId); });
