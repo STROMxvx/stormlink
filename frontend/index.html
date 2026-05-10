@@ -606,7 +606,7 @@
         modal.querySelector('#closeProfileBtn').onclick = () => modal.remove();
     }
 
-    // ========== ПРОФИЛЬ СВОЙ (РЕДАКТИРОВАНИЕ) ==========
+    // ========== ПРОФИЛЬ СВОЙ ==========
     function showMyProfile() {
         const avatarUrl = userAvatars[currentUser] || null;
         const modal = document.createElement('div');
@@ -860,6 +860,7 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
+    // ========== СОЗДАНИЕ ГРУППЫ ==========
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modal = document.createElement('div');
@@ -885,6 +886,7 @@
             const name = modal.querySelector('#groupName').value.trim();
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
+            if (!login) { showToast('Введите логин группы'); return; }
             if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
             groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] });
             saveGroups();
@@ -895,6 +897,7 @@
         modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
     }
 
+    // ========== СОЗДАНИЕ КАНАЛА ==========
     function showCreateChannelModal() {
         let selectedEmoji = '📢';
         const modal = document.createElement('div');
@@ -920,6 +923,7 @@
             const name = modal.querySelector('#channelName').value.trim();
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
+            if (!login) { showToast('Введите логин канала'); return; }
             if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
             channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] });
             saveChannels();
@@ -930,25 +934,29 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК (РАБОТАЕТ) ==========
+    // ========== ПОИСК ==========
     function performSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        const container = document.getElementById('chatsList');
+        
+        // Удаляем старый временный результат
+        const existingTemp = document.getElementById('temp-search-result');
+        if (existingTemp) existingTemp.remove();
+        
         if (!query) {
-            filterChats();
-            const tempDiv = document.getElementById('temp-search-result');
-            if (tempDiv) tempDiv.remove();
+            // Показываем все чаты
+            const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
+            items.forEach(item => item.style.display = 'flex');
             return;
         }
-        // Сначала фильтруем чаты по названию
-        const container = document.getElementById('chatsList');
-        const items = container.querySelectorAll('.chat-item');
+        
+        // Сначала фильтруем существующие чаты по названию
+        const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
             item.style.display = name.includes(query) ? 'flex' : 'none';
         });
-        // Удаляем старый временный результат
-        const existingTemp = document.getElementById('temp-search-result');
-        if (existingTemp) existingTemp.remove();
+        
         // Ищем пользователя
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
             .then(r => r.json())
@@ -966,6 +974,7 @@
                     container.prepend(userDiv);
                 }
             });
+        
         // Ищем группу
         const foundGroup = groups.find(g => g.login === query);
         if (foundGroup) {
@@ -989,6 +998,7 @@
             };
             container.prepend(groupDiv);
         }
+        
         // Ищем канал
         const foundChannel = channels.find(c => c.login === query);
         if (foundChannel) {
@@ -1012,17 +1022,6 @@
             };
             container.prepend(channelDiv);
         }
-    }
-
-    function filterChats() {
-        const query = document.getElementById('searchInput').value.trim().toLowerCase();
-        const container = document.getElementById('chatsList');
-        if (!container) return;
-        const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
-        items.forEach(item => {
-            const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
-            item.style.display = (query === '' || name.includes(query)) ? 'flex' : 'none';
-        });
     }
 
     function showFriendsList() {
@@ -1078,7 +1077,6 @@
         const res = await fetch('/chats');
         let chats = await res.json();
         allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
-        const favoritesKey = `favorites_${currentUser}`;
         if (!allChats.find(c => c.id === 'favorites')) allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true });
         groups.forEach(g => { if (g.members.includes(currentUser)) allChats.push({ id: g.id, name: g.name, avatar: g.avatar, isGroup: true, creator: g.creator }); });
         channels.forEach(c => { if (c.members.includes(currentUser)) allChats.push({ id: c.id, name: c.name, avatar: c.avatar, isChannel: true, creator: c.creator }); });
@@ -1103,12 +1101,7 @@
                 document.getElementById('cancelReplyBtn').style.display = 'none';
             };
             container.appendChild(div);
-            if (chat.isGroup) {
-                const group = groups.find(g => g.id == chat.id);
-                if (group && chat.id == currentChat) currentGroup = group;
-            }
         });
-        filterChats();
     }
 
     async function loadMessages() {
@@ -1271,7 +1264,9 @@
         document.getElementById('searchBtn').onclick = performSearch;
         document.getElementById('searchInput').addEventListener('keyup', (e) => {
             if (e.key === 'Enter') performSearch();
-            else filterChats();
+            else {
+                if (e.target.value === '') performSearch();
+            }
         });
         document.getElementById('friendsIcon').onclick = showFriendsList;
         document.getElementById('burgerBtn').onclick = () => { document.getElementById('sidebar').classList.toggle('open'); };
