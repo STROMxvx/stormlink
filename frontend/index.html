@@ -5,8 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
     <title>StormLink</title>
     <style>
-        /* Стили такие же, как были (не менялись) */
         * { margin: 0; padding: 0; box-sizing: border-box; }
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background: radial-gradient(circle, #0a0f1e, #03050a);
@@ -17,6 +17,7 @@
             color: white;
             overflow: hidden;
         }
+
         .messenger {
             width: 1300px;
             height: 90vh;
@@ -28,6 +29,7 @@
             overflow: hidden;
             backdrop-filter: blur(20px);
         }
+
         .sidebar {
             width: 300px;
             background: rgba(2,8,18,0.9);
@@ -39,6 +41,7 @@
             overflow-y: auto;
             transition: transform 0.2s ease;
         }
+
         body.mobile-mode .messenger {
             width: 100%;
             height: 100vh;
@@ -85,6 +88,7 @@
         .burger-btn {
             display: none;
         }
+
         .user-info {
             display: flex;
             align-items: center;
@@ -435,6 +439,19 @@
             background: rgba(0,255,255,0.15);
             border: 1px solid #0af;
         }
+        .member-list {
+            max-height: 150px;
+            overflow-y: auto;
+            margin-top: 10px;
+            text-align: left;
+        }
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+            border-bottom: 1px solid rgba(0,255,255,0.1);
+        }
     </style>
 </head>
 <body>
@@ -459,7 +476,6 @@
     let audioChunks = [];
     let isRecording = false;
 
-    // Сохранения
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -480,7 +496,6 @@
         return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}, ${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
     }
 
-    // Валидация логина (без @)
     function validateLogin(login) {
         const regex = /^[a-zA-Z0-9_+\-~]+$/;
         return regex.test(login) && login.length >= 3 && login.length <= 20;
@@ -552,6 +567,43 @@
             if (data.error) showToast(data.error);
             else { showToast('Регистрация успешна! Войдите'); showLogin(); }
         };
+    }
+
+    // ========== ПРОФИЛИ ГРУПП И КАНАЛОВ ==========
+    function showGroupProfile(group) {
+        const memberCount = group.members.length;
+        const membersList = group.members.map(m => `<div class="member-item"><div class="avatar" style="width:24px; height:24px; font-size:12px;">👤</div><span>${m}</span></div>`).join('');
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="profile-card" style="width:340px;">
+                <div style="font-size:64px;">${group.avatar || '👥'}</div>
+                <h2>${group.name}</h2>
+                <p>@${group.login}</p>
+                <div><strong>🎮 Тематика:</strong> ${group.theme || 'не указана'}</div>
+                <div><strong>👥 Участники (${memberCount}):</strong></div>
+                <div class="member-list">${membersList || 'Нет участников'}</div>
+                <button id="closeProfileBtn" class="auth-btn" style="margin-top:16px;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#closeProfileBtn').onclick = () => modal.remove();
+    }
+
+    function showChannelProfile(channel) {
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="profile-card">
+                <div style="font-size:64px;">${channel.avatar || '📢'}</div>
+                <h2>${channel.name}</h2>
+                <p>@${channel.login}</p>
+                <div><strong>🎮 Тематика:</strong> ${channel.theme || 'не указана'}</div>
+                <button id="closeProfileBtn" class="auth-btn" style="margin-top:16px;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        modal.querySelector('#closeProfileBtn').onclick = () => modal.remove();
     }
 
     // ========== ПРОФИЛЬ СВОЙ (РЕДАКТИРОВАНИЕ) ==========
@@ -878,82 +930,99 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
+    // ========== ПОИСК (РАБОТАЕТ) ==========
+    function performSearch() {
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
+        if (!query) {
+            filterChats();
+            const tempDiv = document.getElementById('temp-search-result');
+            if (tempDiv) tempDiv.remove();
+            return;
+        }
+        // Сначала фильтруем чаты по названию
+        const container = document.getElementById('chatsList');
+        const items = container.querySelectorAll('.chat-item');
+        items.forEach(item => {
+            const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
+            item.style.display = name.includes(query) ? 'flex' : 'none';
+        });
+        // Удаляем старый временный результат
+        const existingTemp = document.getElementById('temp-search-result');
+        if (existingTemp) existingTemp.remove();
+        // Ищем пользователя
+        fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
+            .then(r => r.json())
+            .then(data => {
+                if (data.found) {
+                    const userDiv = document.createElement('div');
+                    userDiv.id = 'temp-search-result';
+                    userDiv.className = 'chat-item search-result-item';
+                    userDiv.innerHTML = `<div class="chat-info"><span>👤</span><span>${data.login}</span></div>`;
+                    userDiv.onclick = () => {
+                        showUserProfile(data.login);
+                        document.getElementById('searchInput').value = '';
+                        performSearch();
+                    };
+                    container.prepend(userDiv);
+                }
+            });
+        // Ищем группу
+        const foundGroup = groups.find(g => g.login === query);
+        if (foundGroup) {
+            const groupDiv = document.createElement('div');
+            groupDiv.id = 'temp-search-result';
+            groupDiv.className = 'chat-item search-result-item';
+            groupDiv.innerHTML = `<div class="chat-info"><span>${foundGroup.avatar || '👥'}</span><span>${foundGroup.name} (группа)</span></div>`;
+            groupDiv.onclick = () => {
+                if (!foundGroup.members.includes(currentUser)) {
+                    if (confirm(`Вступить в группу "${foundGroup.name}"?`)) {
+                        foundGroup.members.push(currentUser);
+                        saveGroups();
+                        showToast(`Вы вступили в группу ${foundGroup.name}`);
+                        renderChats();
+                    }
+                } else {
+                    showGroupProfile(foundGroup);
+                }
+                document.getElementById('searchInput').value = '';
+                performSearch();
+            };
+            container.prepend(groupDiv);
+        }
+        // Ищем канал
+        const foundChannel = channels.find(c => c.login === query);
+        if (foundChannel) {
+            const channelDiv = document.createElement('div');
+            channelDiv.id = 'temp-search-result';
+            channelDiv.className = 'chat-item search-result-item';
+            channelDiv.innerHTML = `<div class="chat-info"><span>${foundChannel.avatar || '📢'}</span><span>${foundChannel.name} (канал)</span></div>`;
+            channelDiv.onclick = () => {
+                if (!foundChannel.members.includes(currentUser)) {
+                    if (confirm(`Подписаться на канал "${foundChannel.name}"?`)) {
+                        foundChannel.members.push(currentUser);
+                        saveChannels();
+                        showToast(`Вы подписались на канал ${foundChannel.name}`);
+                        renderChats();
+                    }
+                } else {
+                    showChannelProfile(foundChannel);
+                }
+                document.getElementById('searchInput').value = '';
+                performSearch();
+            };
+            container.prepend(channelDiv);
+        }
+    }
+
     function filterChats() {
-        const searchInput = document.getElementById('searchInput');
-        if (!searchInput) return;
-        let query = searchInput.value.toLowerCase().trim();
+        const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('chatsList');
         if (!container) return;
-        const items = container.querySelectorAll('.chat-item');
+        const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
             item.style.display = (query === '' || name.includes(query)) ? 'flex' : 'none';
         });
-        const existingTemp = document.getElementById('temp-search-result');
-        if (existingTemp) existingTemp.remove();
-        
-        // Поиск по логину (пользователи, группы, каналы)
-        if (query.length > 0) {
-            // Поиск пользователя
-            fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
-                .then(r => r.json())
-                .then(data => {
-                    if (data.found) {
-                        const userDiv = document.createElement('div');
-                        userDiv.id = 'temp-search-result';
-                        userDiv.className = 'chat-item search-result-item';
-                        userDiv.innerHTML = `<div class="chat-info"><span>👤</span><span>${data.login}</span></div>`;
-                        userDiv.onclick = () => {
-                            showUserProfile(data.login);
-                            searchInput.value = '';
-                            filterChats();
-                        };
-                        container.prepend(userDiv);
-                    }
-                });
-            // Поиск группы
-            const foundGroup = groups.find(g => g.login === query);
-            if (foundGroup) {
-                const groupDiv = document.createElement('div');
-                groupDiv.id = 'temp-search-result';
-                groupDiv.className = 'chat-item search-result-item';
-                groupDiv.innerHTML = `<div class="chat-info"><span>${foundGroup.avatar || '👥'}</span><span>${foundGroup.name} (группа)</span></div>`;
-                groupDiv.onclick = () => {
-                    if (!foundGroup.members.includes(currentUser)) {
-                        if (confirm(`Вступить в группу "${foundGroup.name}"?`)) {
-                            foundGroup.members.push(currentUser);
-                            saveGroups();
-                            showToast(`Вы вступили в группу ${foundGroup.name}`);
-                            renderChats();
-                        }
-                    } else showToast('Вы уже участник');
-                    searchInput.value = '';
-                    filterChats();
-                };
-                container.prepend(groupDiv);
-            }
-            // Поиск канала
-            const foundChannel = channels.find(c => c.login === query);
-            if (foundChannel) {
-                const channelDiv = document.createElement('div');
-                channelDiv.id = 'temp-search-result';
-                channelDiv.className = 'chat-item search-result-item';
-                channelDiv.innerHTML = `<div class="chat-info"><span>${foundChannel.avatar || '📢'}</span><span>${foundChannel.name} (канал)</span></div>`;
-                channelDiv.onclick = () => {
-                    if (!foundChannel.members.includes(currentUser)) {
-                        if (confirm(`Подписаться на канал "${foundChannel.name}"?`)) {
-                            foundChannel.members.push(currentUser);
-                            saveChannels();
-                            showToast(`Вы подписались на канал ${foundChannel.name}`);
-                            renderChats();
-                        }
-                    } else showToast('Вы уже подписаны');
-                    searchInput.value = '';
-                    filterChats();
-                };
-                container.prepend(channelDiv);
-            }
-        }
     }
 
     function showFriendsList() {
@@ -1034,6 +1103,10 @@
                 document.getElementById('cancelReplyBtn').style.display = 'none';
             };
             container.appendChild(div);
+            if (chat.isGroup) {
+                const group = groups.find(g => g.id == chat.id);
+                if (group && chat.id == currentChat) currentGroup = group;
+            }
         });
         filterChats();
     }
@@ -1086,7 +1159,7 @@
                         <div><strong>${currentUser}</strong></div>
                     </div>
                     <div class="search-player">
-                        <input type="text" id="searchInput" placeholder="Поиск чатов или @логин...">
+                        <input type="text" id="searchInput" placeholder="Поиск (логин пользователя, группы, канала)">
                         <button id="searchBtn">🔍</button>
                     </div>
                     <div class="chats-list" id="chatsList"></div>
@@ -1195,11 +1268,22 @@
         document.getElementById('voiceBtn').onclick = startVoiceRecording;
         document.getElementById('cancelVoiceBtn').onclick = cancelVoiceRecording;
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerText = ''; document.getElementById('cancelReplyBtn').style.display = 'none'; };
-        document.getElementById('searchBtn').onclick = filterChats;
-        document.getElementById('searchInput').addEventListener('keyup', () => filterChats());
+        document.getElementById('searchBtn').onclick = performSearch;
+        document.getElementById('searchInput').addEventListener('keyup', (e) => {
+            if (e.key === 'Enter') performSearch();
+            else filterChats();
+        });
         document.getElementById('friendsIcon').onclick = showFriendsList;
         document.getElementById('burgerBtn').onclick = () => { document.getElementById('sidebar').classList.toggle('open'); };
-        document.getElementById('chatTitle').onclick = () => showToast(currentChat !== 'favorites' ? `Профиль чата: ${currentChatName}` : 'Избранное — личные заметки');
+        document.getElementById('chatTitle').onclick = () => {
+            if (currentChat !== 'favorites') {
+                const group = groups.find(g => g.id == currentChat);
+                const channel = channels.find(c => c.id == currentChat);
+                if (group) showGroupProfile(group);
+                else if (channel) showChannelProfile(channel);
+                else showToast(`Профиль чата: ${currentChatName}`);
+            } else showToast('Избранное — личные заметки');
+        };
         socket.emit('join', currentChat);
     }
     renderAuth();
