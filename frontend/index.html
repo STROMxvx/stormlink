@@ -439,28 +439,6 @@
             background: rgba(0,255,255,0.15);
             border: 1px solid #0af;
         }
-        .prefix-input {
-            display: flex;
-            align-items: center;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            padding: 0 12px;
-            margin: 12px 0;
-        }
-        .prefix-input span {
-            color: #0af;
-            font-size: 16px;
-            font-weight: bold;
-        }
-        .prefix-input input {
-            flex: 1;
-            background: transparent;
-            border: none;
-            padding: 12px 8px;
-            color: white;
-            outline: none;
-        }
     </style>
 </head>
 <body>
@@ -505,11 +483,10 @@
         return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}, ${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
     }
 
-    // ✅ ИСПРАВЛЕННАЯ ВАЛИДАЦИЯ — работает с любыми латинскими буквами, цифрами, _ + - ~
+    // ✅ ВАЛИДАЦИЯ БЕЗ @
     function validateLogin(login) {
-        const raw = login.startsWith('@') ? login.substring(1) : login;
         const regex = /^[a-zA-Z0-9_+\-~]+$/;
-        return regex.test(raw) && raw.length >= 3 && raw.length <= 20;
+        return regex.test(login) && login.length >= 3 && login.length <= 20;
     }
 
     async function renderAuth() {
@@ -532,15 +509,14 @@
 
     function showLogin() {
         document.getElementById('authForm').innerHTML = `
-            <div class="prefix-input"><span>@</span><input type="text" id="login" placeholder="логин"></div>
+            <input type="text" id="login" placeholder="Логин">
             <input type="password" id="password" placeholder="Пароль">
             <button id="doLogin" class="auth-btn">Войти</button>
         `;
         document.getElementById('doLogin').onclick = async () => {
-            let login = document.getElementById('login').value.trim();
-            if (!login) { showToast('Введите логин'); return; }
-            if (!login.startsWith('@')) login = '@' + login;
+            const login = document.getElementById('login').value.trim();
             const password = document.getElementById('password').value;
+            if (!login) { showToast('Введите логин'); return; }
             if (!password) { showToast('Введите пароль'); return; }
             const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
             const data = await res.json();
@@ -551,18 +527,17 @@
 
     function showRegister() {
         document.getElementById('authForm').innerHTML = `
-            <div class="prefix-input"><span>@</span><input type="text" id="regLogin" placeholder="логин"></div>
+            <input type="text" id="regLogin" placeholder="Логин">
             <input type="password" id="regPassword" placeholder="Пароль">
             <input type="date" id="regBirthdate">
             <textarea id="regAbout" rows="2" placeholder="О себе"></textarea>
             <button id="doReg" class="auth-btn">Зарегистрироваться</button>
         `;
         document.getElementById('doReg').onclick = async () => {
-            let loginRaw = document.getElementById('regLogin').value.trim();
-            if (!loginRaw) { showToast('Введите логин'); return; }
-            let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
+            const login = document.getElementById('regLogin').value.trim();
+            if (!login) { showToast('Введите логин'); return; }
             if (!validateLogin(login)) {
-                showToast('Логин должен содержать только латиницу (A-Z, a-z), цифры и символы _ + - ~ (3-20 символов)');
+                showToast('Логин: только латиница, цифры и символы _ + - ~ (3-20 символов)');
                 return;
             }
             const password = document.getElementById('regPassword').value;
@@ -772,7 +747,7 @@
                     <span class="emoji-option">⭐</span><span class="emoji-option">💬</span><span class="emoji-option">🎲</span>
                     <span class="emoji-option">👾</span><span class="emoji-option">⚡</span><span class="emoji-option">💀</span>
                 </div>
-                <div class="prefix-input"><span>@</span><input type="text" id="groupLogin" placeholder="логин группы"></div>
+                <input type="text" id="groupLogin" placeholder="Логин группы (латиница, цифры, _+-~)">
                 <input type="text" id="groupName" placeholder="Название группы">
                 <input type="text" id="groupTheme" placeholder="Тематика">
                 <div class="modal-buttons"><button id="confirmCreateGroup">Создать</button><button id="cancelCreateGroup">Отмена</button></div>
@@ -781,12 +756,11 @@
         document.body.appendChild(modal);
         document.querySelectorAll('#emojiPickerGroup .emoji-option').forEach(el => { el.onclick = () => { selectedEmoji = el.innerText; }; });
         modal.querySelector('#confirmCreateGroup').onclick = () => {
-            let loginRaw = modal.querySelector('#groupLogin').value.trim();
-            let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
+            const login = modal.querySelector('#groupLogin').value.trim();
             const name = modal.querySelector('#groupName').value.trim();
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            if (!validateLogin(login)) { showToast('Логин группы: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
+            if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
             groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] });
             saveGroups();
             showToast(`Группа "${name}" создана`);
@@ -808,7 +782,7 @@
                     <span class="emoji-option">⭐</span><span class="emoji-option">💬</span><span class="emoji-option">🎲</span>
                     <span class="emoji-option">👾</span><span class="emoji-option">⚡</span><span class="emoji-option">💀</span>
                 </div>
-                <div class="prefix-input"><span>@</span><input type="text" id="channelLogin" placeholder="логин канала"></div>
+                <input type="text" id="channelLogin" placeholder="Логин канала (латиница, цифры, _+-~)">
                 <input type="text" id="channelName" placeholder="Название канала">
                 <input type="text" id="channelTheme" placeholder="Тематика">
                 <div class="modal-buttons"><button id="confirmCreateChannel">Создать</button><button id="cancelCreateChannel">Отмена</button></div>
@@ -817,12 +791,11 @@
         document.body.appendChild(modal);
         document.querySelectorAll('#emojiPickerChannel .emoji-option').forEach(el => { el.onclick = () => { selectedEmoji = el.innerText; }; });
         modal.querySelector('#confirmCreateChannel').onclick = () => {
-            let loginRaw = modal.querySelector('#channelLogin').value.trim();
-            let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
+            const login = modal.querySelector('#channelLogin').value.trim();
             const name = modal.querySelector('#channelName').value.trim();
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            if (!validateLogin(login)) { showToast('Логин канала: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
+            if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
             channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] });
             saveChannels();
             showToast(`Канал "${name}" создан`);
@@ -859,7 +832,7 @@
                         container.prepend(userDiv);
                     }
                 });
-            const foundGroup = groups.find(g => g.login === query);
+            const foundGroup = groups.find(g => g.login === query.substring(1));
             if (foundGroup) {
                 const groupDiv = document.createElement('div');
                 groupDiv.id = 'temp-search-result';
@@ -879,7 +852,7 @@
                 };
                 container.prepend(groupDiv);
             }
-            const foundChannel = channels.find(c => c.login === query);
+            const foundChannel = channels.find(c => c.login === query.substring(1));
             if (foundChannel) {
                 const channelDiv = document.createElement('div');
                 channelDiv.id = 'temp-search-result';
