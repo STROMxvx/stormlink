@@ -30,7 +30,7 @@
             backdrop-filter: blur(20px);
         }
 
-        /* ===== ПК-ВЕРСИЯ (широкий сайдбар) ===== */
+        /* ===== ПК-ВЕРСИЯ ===== */
         .sidebar {
             width: 300px;
             background: rgba(2,8,18,0.9);
@@ -43,7 +43,7 @@
             transition: transform 0.2s ease;
         }
 
-        /* ===== МОБИЛЬНАЯ ВЕРСИЯ (включается классом .mobile-mode) ===== */
+        /* ===== МОБИЛЬНАЯ ВЕРСИЯ ===== */
         body.mobile-mode .messenger {
             width: 100%;
             height: 100vh;
@@ -67,7 +67,7 @@
             display: block;
             position: fixed;
             top: 15px;
-            left: 15px;
+            right: 15px;
             z-index: 1001;
             background: #0af;
             border: none;
@@ -78,14 +78,20 @@
             cursor: pointer;
             color: black;
         }
+        body.mobile-mode .friends-icon {
+            left: 15px;
+            right: auto;
+            bottom: 20px;
+        }
         body.mobile-mode .chat-header {
-            padding-left: 70px;
+            padding-left: 15px;
+            padding-right: 60px;
         }
         .burger-btn {
             display: none;
         }
 
-        /* Общие стили (не менялись) */
+        /* Общие стили */
         .user-info {
             display: flex;
             align-items: center;
@@ -96,7 +102,6 @@
             cursor: pointer;
         }
         .user-info:hover { background: rgba(0,255,255,0.2); }
-
         .avatar {
             width: 48px;
             height: 48px;
@@ -109,7 +114,6 @@
             background-size: cover;
             background-position: center;
         }
-
         .search-player {
             background: rgba(0,255,255,0.05);
             border: 1px solid #0af;
@@ -132,7 +136,6 @@
             padding: 4px 12px;
             cursor: pointer;
         }
-
         .chats-list {
             flex: 1;
             display: flex;
@@ -163,7 +166,6 @@
             text-align: center;
             cursor: pointer;
         }
-
         .chat-area {
             flex: 1;
             display: flex;
@@ -191,7 +193,6 @@
             cursor: pointer;
             padding: 4px 12px;
         }
-
         .chat-messages {
             flex: 1;
             padding: 20px;
@@ -225,9 +226,7 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-        .message-content {
-            flex: 1;
-        }
+        .message-content { flex: 1; }
         .my-message {
             align-self: flex-end;
             background: #0af;
@@ -249,7 +248,6 @@
             border-radius: 16px;
         }
         .message-actions span:hover { opacity: 1; background: cyan; color: black; }
-
         .chat-input {
             display: flex;
             padding: 16px;
@@ -277,8 +275,6 @@
             padding: 0 12px;
             transition: 0.2s;
         }
-        .chat-input button:hover { transform: scale(1.1); }
-
         .reply-indicator {
             font-size: 12px;
             opacity: 0.7;
@@ -286,7 +282,6 @@
             border-left: 2px solid cyan;
             padding-left: 8px;
         }
-
         .voice-recording {
             display: flex;
             align-items: center;
@@ -310,7 +305,6 @@
             background: cyan;
             transition: width 0.1s linear;
         }
-
         .modal-toast {
             position: fixed;
             top: 50%;
@@ -325,7 +319,6 @@
             z-index: 2000;
             box-shadow: 0 0 40px rgba(0,255,255,0.3);
         }
-
         .friends-icon {
             position: fixed;
             bottom: 20px;
@@ -341,7 +334,6 @@
             z-index: 25;
             box-shadow: 0 0 15px cyan;
         }
-
         .icon-btn {
             background: none;
             border: none;
@@ -350,7 +342,6 @@
             color: cyan;
             margin-right: 8px;
         }
-
         .modal {
             position: fixed; top:0; left:0; width:100%; height:100%;
             background: rgba(0,0,0,0.8); backdrop-filter: blur(6px);
@@ -358,21 +349,56 @@
             z-index: 1000;
         }
         .modal-box {
-            background: #0c1322; border:2px solid #0af; border-radius:28px;
-            padding:24px; width:320px; text-align:center;
+            background: #0c1322;
+            border: 2px solid #0af;
+            border-radius: 28px;
+            padding: 28px;
+            width: 380px;
+            text-align: center;
         }
+        .modal-box input, .modal-box textarea, .modal-box select {
+            width: 100%;
+            padding: 12px;
+            margin: 12px 0;
+            background: #010a1a;
+            border: 1px solid #0af;
+            border-radius: 40px;
+            color: white;
+            font-family: inherit;
+        }
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+        .modal-buttons button { flex: 1; padding: 10px; background: #0af; border: none; border-radius: 40px; cursor: pointer; }
         .profile-card {
-            background: #0c1322; border:2px solid #0af; border-radius:28px;
-            padding:24px; width:320px; text-align:center;
+            background: #0c1322;
+            border: 2px solid #0af;
+            border-radius: 28px;
+            padding: 24px;
+            width: 320px;
+            text-align: center;
         }
         .friends-list {
-            background: #0c1322; border:2px solid #0af; border-radius:28px;
-            padding:20px; width:320px; text-align:center;
-            max-height: 70vh; overflow-y: auto;
+            background: #0c1322;
+            border: 2px solid #0af;
+            border-radius: 28px;
+            padding: 20px;
+            width: 320px;
+            text-align: center;
+            max-height: 70vh;
+            overflow-y: auto;
         }
         .friend-item {
-            display: flex; align-items: center; gap: 12px; padding: 8px;
-            background: rgba(0,255,255,0.05); border-radius: 20px; margin-bottom: 8px; cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            background: rgba(0,255,255,0.05);
+            border-radius: 20px;
+            margin-bottom: 8px;
+            cursor: pointer;
         }
         .friend-item:hover { background: rgba(0,255,255,0.2); }
         .friend-avatar {
@@ -386,7 +412,6 @@
         }
         .emoji-option { cursor: pointer; padding: 4px 8px; border-radius: 12px; }
         .emoji-option:hover { background: #0af; }
-
         .auth-box {
             background: rgba(6,12,24,0.95);
             border: 2px solid #0af;
@@ -417,6 +442,28 @@
             background: rgba(0,255,255,0.15);
             border: 1px solid #0af;
         }
+        .prefix-input {
+            display: flex;
+            align-items: center;
+            background: #010a1a;
+            border: 1px solid #0af;
+            border-radius: 40px;
+            padding: 0 12px;
+            margin: 12px 0;
+        }
+        .prefix-input span {
+            color: #0af;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .prefix-input input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            padding: 12px 8px;
+            color: white;
+            outline: none;
+        }
     </style>
 </head>
 <body>
@@ -443,7 +490,7 @@
     let isRecording = false;
     let searchFilter = '';
 
-    // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
+    // ========== ВСПОМОГАТЕЛЬНЫЕ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
     function saveDeletedChats() { localStorage.setItem('deletedChats', JSON.stringify(deletedChats)); }
@@ -465,10 +512,11 @@
     }
 
     function validateLogin(login) {
-        return /^[a-zA-Z0-9_+\-~]+$/.test(login) && login.length <= 20 && login.length >= 3;
+        const loginWithoutAt = login.startsWith('@') ? login.substring(1) : login;
+        return /^[a-zA-Z0-9_+\-~]+$/.test(loginWithoutAt) && loginWithoutAt.length <= 20 && loginWithoutAt.length >= 3;
     }
 
-    // ========== АВТОРИЗАЦИЯ ==========
+    // ========== АВТОРИЗАЦИЯ С @ ==========
     async function renderAuth() {
         document.getElementById('app').innerHTML = `
             <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center;">
@@ -489,12 +537,16 @@
 
     function showLogin() {
         document.getElementById('authForm').innerHTML = `
-            <input type="text" id="login" placeholder="Логин (латиница, цифры, _+-~)">
+            <div class="prefix-input">
+                <span>@</span>
+                <input type="text" id="login" placeholder="логин">
+            </div>
             <input type="password" id="password" placeholder="Пароль">
             <button id="doLogin" class="auth-btn">Войти</button>
         `;
         document.getElementById('doLogin').onclick = async () => {
-            const login = document.getElementById('login').value;
+            let login = document.getElementById('login').value;
+            if (!login.startsWith('@')) login = '@' + login;
             const password = document.getElementById('password').value;
             const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
             const data = await res.json();
@@ -505,14 +557,18 @@
 
     function showRegister() {
         document.getElementById('authForm').innerHTML = `
-            <input type="text" id="regLogin" placeholder="Логин (латиница, цифры, _+-~)">
+            <div class="prefix-input">
+                <span>@</span>
+                <input type="text" id="regLogin" placeholder="логин">
+            </div>
             <input type="password" id="regPassword" placeholder="Пароль">
             <input type="date" id="regBirthdate">
             <textarea id="regAbout" rows="2" placeholder="О себе"></textarea>
             <button id="doReg" class="auth-btn">Зарегистрироваться</button>
         `;
         document.getElementById('doReg').onclick = async () => {
-            const login = document.getElementById('regLogin').value;
+            let login = document.getElementById('regLogin').value;
+            if (!login.startsWith('@')) login = '@' + login;
             if (!validateLogin(login)) {
                 showToast('Логин: 3-20 символов, латиница, цифры, _+-~', true);
                 return;
@@ -552,7 +608,7 @@
                 modal.innerHTML = `
                     <div class="profile-card">
                         <div class="avatar" style="width:80px; height:80px; font-size:40px; margin:0 auto; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div>
-                        <h2>@${data.login}</h2>
+                        <h2>${data.login}</h2>
                         <div><strong>📅 Дата рождения:</strong> ${data.birthdate || 'не указана'}</div>
                         <div><strong>📝 О себе:</strong> ${data.about || 'не указано'}</div>
                         <button id="friendBtn" class="auth-btn" style="margin-top:12px;">${isFriend ? '❌ Удалить из друзей' : '➕ Добавить в друзья'}</button>
@@ -730,18 +786,129 @@
         modal.querySelector('#closeEmoji').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК ПОЛЬЗОВАТЕЛЕЙ И ГРУПП (фильтрация чатов) ==========
+    // ========== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ ГРУППЫ ==========
+    function showCreateGroupModal() {
+        let selectedEmoji = '👥';
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h3>👥 Создать группу</h3>
+                <div class="emoji-picker" id="emojiPickerGroup">
+                    <span class="emoji-option">👥</span><span class="emoji-option">🎮</span><span class="emoji-option">🔥</span>
+                    <span class="emoji-option">⭐</span><span class="emoji-option">💬</span><span class="emoji-option">🎲</span>
+                    <span class="emoji-option">👾</span><span class="emoji-option">⚡</span><span class="emoji-option">💀</span>
+                </div>
+                <div class="prefix-input">
+                    <span>@</span>
+                    <input type="text" id="groupLogin" placeholder="логин группы">
+                </div>
+                <input type="text" id="groupName" placeholder="Название группы">
+                <input type="text" id="groupTheme" placeholder="Тематика">
+                <div class="modal-buttons">
+                    <button id="confirmCreateGroup">Создать</button>
+                    <button id="cancelCreateGroup">Отмена</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.querySelectorAll('#emojiPickerGroup .emoji-option').forEach(el => {
+            el.onclick = () => { selectedEmoji = el.innerText; };
+        });
+        
+        modal.querySelector('#confirmCreateGroup').onclick = () => {
+            let login = modal.querySelector('#groupLogin').value;
+            if (!login.startsWith('@')) login = '@' + login;
+            const name = modal.querySelector('#groupName').value.trim();
+            const theme = modal.querySelector('#groupTheme').value;
+            if (!name) { showToast('Введите название', true); return; }
+            if (!validateLogin(login)) { showToast('Логин должен быть 3-20 символов, латиница, цифры, _+-~', true); return; }
+            
+            groups.push({
+                id: Date.now(),
+                login: login,
+                name: name,
+                avatar: selectedEmoji,
+                theme: theme,
+                creator: currentUser,
+                members: [currentUser]
+            });
+            saveGroups();
+            showToast(`Группа "${name}" создана`);
+            renderChats();
+            modal.remove();
+        };
+        modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
+    }
+
+    // ========== МОДАЛЬНОЕ ОКНО СОЗДАНИЯ КАНАЛА ==========
+    function showCreateChannelModal() {
+        let selectedEmoji = '📢';
+        const modal = document.createElement('div');
+        modal.className = 'modal';
+        modal.innerHTML = `
+            <div class="modal-box">
+                <h3>📢 Создать канал</h3>
+                <div class="emoji-picker" id="emojiPickerChannel">
+                    <span class="emoji-option">📢</span><span class="emoji-option">🎮</span><span class="emoji-option">🔥</span>
+                    <span class="emoji-option">⭐</span><span class="emoji-option">💬</span><span class="emoji-option">🎲</span>
+                    <span class="emoji-option">👾</span><span class="emoji-option">⚡</span><span class="emoji-option">💀</span>
+                </div>
+                <div class="prefix-input">
+                    <span>@</span>
+                    <input type="text" id="channelLogin" placeholder="логин канала">
+                </div>
+                <input type="text" id="channelName" placeholder="Название канала">
+                <input type="text" id="channelTheme" placeholder="Тематика">
+                <div class="modal-buttons">
+                    <button id="confirmCreateChannel">Создать</button>
+                    <button id="cancelCreateChannel">Отмена</button>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(modal);
+        
+        document.querySelectorAll('#emojiPickerChannel .emoji-option').forEach(el => {
+            el.onclick = () => { selectedEmoji = el.innerText; };
+        });
+        
+        modal.querySelector('#confirmCreateChannel').onclick = () => {
+            let login = modal.querySelector('#channelLogin').value;
+            if (!login.startsWith('@')) login = '@' + login;
+            const name = modal.querySelector('#channelName').value.trim();
+            const theme = modal.querySelector('#channelTheme').value;
+            if (!name) { showToast('Введите название', true); return; }
+            if (!validateLogin(login)) { showToast('Логин должен быть 3-20 символов, латиница, цифры, _+-~', true); return; }
+            
+            channels.push({
+                id: Date.now(),
+                login: login,
+                name: name,
+                avatar: selectedEmoji,
+                theme: theme,
+                creator: currentUser,
+                members: []
+            });
+            saveChannels();
+            showToast(`Канал "${name}" создан`);
+            renderChats();
+            modal.remove();
+        };
+        modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
+    }
+
+    // ========== ПОИСК (фильтрация чатов + поиск по @) ==========
     function filterChats() {
         const searchInput = document.getElementById('searchInput');
         if (!searchInput) return;
-        const query = searchInput.value.toLowerCase().trim();
+        let query = searchInput.value.toLowerCase().trim();
         
-        // Фильтруем чаты по названию
         const container = document.getElementById('chatsList');
         if (!container) return;
         const items = container.querySelectorAll('.chat-item');
         
-        // Сначала скрываем все чаты
+        // Фильтрация чатов
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
             if (query === '' || name.includes(query)) {
@@ -751,19 +918,21 @@
             }
         });
         
-        // Если есть точное совпадение с @логин, ищем пользователя
+        // Удаляем старый временный элемент
+        const existingTemp = document.getElementById('temp-search-result');
+        if (existingTemp) existingTemp.remove();
+        
+        // Поиск по @логин (пользователи, группы, каналы)
         if (query.startsWith('@')) {
-            const login = query.substring(1);
-            fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
+            const searchLogin = query.substring(1);
+            
+            // Ищем пользователя
+            fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: searchLogin }) })
                 .then(r => r.json())
                 .then(data => {
                     if (data.found) {
-                        // Убираем предыдущие результаты поиска пользователей
-                        const existingUserItem = document.getElementById('search-user-item');
-                        if (existingUserItem) existingUserItem.remove();
-                        
                         const userDiv = document.createElement('div');
-                        userDiv.id = 'search-user-item';
+                        userDiv.id = 'temp-search-result';
                         userDiv.className = 'chat-item search-result-item';
                         userDiv.innerHTML = `
                             <div class="chat-info">
@@ -773,16 +942,70 @@
                         `;
                         userDiv.onclick = () => {
                             showUserProfile(data.login);
-                            // Очищаем поиск
                             searchInput.value = '';
                             filterChats();
                         };
                         container.prepend(userDiv);
                     }
                 });
-        } else {
-            const existingUserItem = document.getElementById('search-user-item');
-            if (existingUserItem) existingUserItem.remove();
+            
+            // Ищем группу
+            const foundGroup = groups.find(g => g.login === query);
+            if (foundGroup) {
+                const groupDiv = document.createElement('div');
+                groupDiv.id = 'temp-search-result';
+                groupDiv.className = 'chat-item search-result-item';
+                groupDiv.innerHTML = `
+                    <div class="chat-info">
+                        <span>${foundGroup.avatar || '👥'}</span>
+                        <span>${foundGroup.name} (группа)</span>
+                    </div>
+                `;
+                groupDiv.onclick = () => {
+                    if (!foundGroup.members.includes(currentUser)) {
+                        if (confirm(`Вступить в группу "${foundGroup.name}"?`)) {
+                            foundGroup.members.push(currentUser);
+                            saveGroups();
+                            showToast(`Вы вступили в группу ${foundGroup.name}`);
+                            renderChats();
+                        }
+                    } else {
+                        showToast('Вы уже участник');
+                    }
+                    searchInput.value = '';
+                    filterChats();
+                };
+                container.prepend(groupDiv);
+            }
+            
+            // Ищем канал
+            const foundChannel = channels.find(c => c.login === query);
+            if (foundChannel) {
+                const channelDiv = document.createElement('div');
+                channelDiv.id = 'temp-search-result';
+                channelDiv.className = 'chat-item search-result-item';
+                channelDiv.innerHTML = `
+                    <div class="chat-info">
+                        <span>${foundChannel.avatar || '📢'}</span>
+                        <span>${foundChannel.name} (канал)</span>
+                    </div>
+                `;
+                channelDiv.onclick = () => {
+                    if (!foundChannel.members.includes(currentUser)) {
+                        if (confirm(`Подписаться на канал "${foundChannel.name}"?`)) {
+                            foundChannel.members.push(currentUser);
+                            saveChannels();
+                            showToast(`Вы подписались на канал ${foundChannel.name}`);
+                            renderChats();
+                        }
+                    } else {
+                        showToast('Вы уже подписаны');
+                    }
+                    searchInput.value = '';
+                    filterChats();
+                };
+                container.prepend(channelDiv);
+            }
         }
     }
 
@@ -802,7 +1025,7 @@
                 div.className = 'friend-item';
                 div.innerHTML = `
                     <div class="friend-avatar" style="${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div>
-                    <div><strong>${login}</strong><br>@${login}</div>
+                    <div><strong>${login}</strong></div>
                 `;
                 div.onclick = () => { modal.remove(); showUserProfile(login); };
                 container.appendChild(div);
@@ -840,23 +1063,19 @@
         }
     }
 
-    // ========== ЗАГРУЗКА ЧАТОВ (с отдельным избранным для каждого пользователя) ==========
+    // ========== ЗАГРУЗКА ЧАТОВ ==========
     async function loadChats() {
         const res = await fetch('/chats');
         let chats = await res.json();
         allChats = chats.filter(c => c.name !== 'Новости ST_Link' && !deletedChats.includes(c.id));
         
-        // Избранное для каждого пользователя отдельно
         const favoritesKey = `favorites_${currentUser}`;
         let userFavorites = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
-        
-        // Проверяем, есть ли чат "Избранное" в списке
         if (!allChats.find(c => c.id === 'favorites')) {
-            allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true, messages: userFavorites });
+            allChats.unshift({ id: 'favorites', name: 'Избранное', avatar: '⭐', private: true });
         } else {
-            // Загружаем сохранённые сообщения избранного для этого пользователя
             const favChat = allChats.find(c => c.id === 'favorites');
-            if (favChat) {
+            if (favChat && messagesData['favorites']) {
                 messagesData['favorites'] = userFavorites;
             }
         }
@@ -898,12 +1117,10 @@
             };
             container.appendChild(div);
         });
-        // Применяем фильтр после рендера
         filterChats();
     }
 
     async function loadMessages() {
-        // Если это избранное, берём из localStorage
         if (currentChat === 'favorites') {
             const favoritesKey = `favorites_${currentUser}`;
             messagesData['favorites'] = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
@@ -915,7 +1132,6 @@
         renderMessages();
     }
 
-    // Перехватываем отправку сообщений, чтобы сохранять избранное
     function saveFavoriteMessage(text) {
         const favoritesKey = `favorites_${currentUser}`;
         let favMessages = JSON.parse(localStorage.getItem(favoritesKey) || '[]');
@@ -932,7 +1148,7 @@
         await loadChats();
         socket = io();
         socket.on('newMessage', (msg) => {
-            if (currentChat === 'favorites') return; // избранное через localStorage
+            if (currentChat === 'favorites') return;
             if (!messagesData[currentChat]) messagesData[currentChat] = [];
             messagesData[currentChat].push(msg);
             renderMessages();
@@ -1023,26 +1239,8 @@
         };
         document.getElementById('msgInput').addEventListener('keypress', (e) => { if (e.key === 'Enter') document.getElementById('sendBtn').click(); });
         document.getElementById('profileBtn').onclick = () => showUserProfile(currentUser);
-        document.getElementById('createGroupBtn').onclick = () => {
-            const name = prompt('Название группы');
-            const login = prompt('Логин группы (латиница, 3-20 символов)');
-            if (name && login && validateLogin(login)) {
-                groups.push({ id: Date.now(), name, login, creator: currentUser, members: [currentUser], avatar: '👥' });
-                saveGroups();
-                showToast(`Группа "${name}" создана`);
-                renderChats();
-            } else showToast('Некорректный логин', true);
-        };
-        document.getElementById('createChannelBtn').onclick = () => {
-            const name = prompt('Название канала');
-            const login = prompt('Логин канала (латиница, 3-20 символов)');
-            if (name && login && validateLogin(login)) {
-                channels.push({ id: Date.now(), name, login, creator: currentUser, members: [], avatar: '📢' });
-                saveChannels();
-                showToast(`Канал "${name}" создан`);
-                renderChats();
-            } else showToast('Некорректный логин', true);
-        };
+        document.getElementById('createGroupBtn').onclick = showCreateGroupModal;
+        document.getElementById('createChannelBtn').onclick = showCreateChannelModal;
         document.getElementById('headerDotsBtn').onclick = () => {
             const menu = document.createElement('div');
             menu.className = 'chat-menu';
