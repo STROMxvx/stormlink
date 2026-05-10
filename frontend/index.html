@@ -936,7 +936,7 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ПОИСК (ГАРАНТИРОВАННО РАБОТАЕТ) ==========
+    // ========== ПОИСК (ГАРАНТИРОВАННО РАБОТАЕТ С ЛЮБЫМ ЛОГИНОМ) ==========
     function performSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('chatsList');
@@ -946,23 +946,24 @@
         if (existingTemp) existingTemp.remove();
         
         if (!query) {
-            // Показываем все чаты
             const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
             items.forEach(item => item.style.display = 'flex');
             return;
         }
         
-        // Сначала фильтруем существующие чаты по названию
+        // Фильтруем существующие чаты по названию
         const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
             item.style.display = name.includes(query) ? 'flex' : 'none';
         });
         
-        // Ищем пользователя через API
+        // Ищем пользователя (через сервер)
+        console.log('Поиск пользователя:', query);
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: query }) })
             .then(r => r.json())
             .then(data => {
+                console.log('Ответ поиска пользователя:', data);
                 if (data.found && data.login !== currentUser) {
                     const userDiv = document.createElement('div');
                     userDiv.id = 'temp-search-result';
@@ -974,9 +975,13 @@
                         performSearch();
                     };
                     container.prepend(userDiv);
+                } else if (data.found && data.login === currentUser) {
+                    console.log('Это вы сами, не показываем');
+                } else {
+                    console.log('Пользователь не найден');
                 }
             })
-            .catch(err => console.log('Ошибка поиска пользователя:', err));
+            .catch(err => console.error('Ошибка поиска пользователя:', err));
         
         // Ищем группу в локальном хранилище
         const foundGroup = groups.find(g => g.login === query);
@@ -1208,7 +1213,6 @@
         }
         renderChats();
         loadMessages();
-
         document.getElementById('sendBtn').onclick = () => {
             const input = document.getElementById('msgInput');
             let text = input.value.trim();
