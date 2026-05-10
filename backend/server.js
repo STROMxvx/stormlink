@@ -22,24 +22,28 @@ const CHATS_FILE = path.join(__dirname, 'chats.json');
 const MESSAGES_FILE = path.join(__dirname, 'messages.json');
 const FRIENDS_FILE = path.join(__dirname, 'friends.json');
 const REQUESTS_FILE = path.join(__dirname, 'friendRequests.json');
+const GROUP_REQUESTS_FILE = path.join(__dirname, 'groupRequests.json');
 
 let users = {};
 let globalChats = [];
 let messages = {};
 let friends = {};
 let friendRequests = {};
+let groupRequests = {};
 
 if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE));
 if (fs.existsSync(CHATS_FILE)) globalChats = JSON.parse(fs.readFileSync(CHATS_FILE));
 if (fs.existsSync(MESSAGES_FILE)) messages = JSON.parse(fs.readFileSync(MESSAGES_FILE));
 if (fs.existsSync(FRIENDS_FILE)) friends = JSON.parse(fs.readFileSync(FRIENDS_FILE));
 if (fs.existsSync(REQUESTS_FILE)) friendRequests = JSON.parse(fs.readFileSync(REQUESTS_FILE));
+if (fs.existsSync(GROUP_REQUESTS_FILE)) groupRequests = JSON.parse(fs.readFileSync(GROUP_REQUESTS_FILE));
 
 function saveUsers() { fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); }
 function saveChats() { fs.writeFileSync(CHATS_FILE, JSON.stringify(globalChats, null, 2)); }
 function saveMessages() { fs.writeFileSync(MESSAGES_FILE, JSON.stringify(messages, null, 2)); }
 function saveFriends() { fs.writeFileSync(FRIENDS_FILE, JSON.stringify(friends, null, 2)); }
 function saveRequests() { fs.writeFileSync(REQUESTS_FILE, JSON.stringify(friendRequests, null, 2)); }
+function saveGroupRequests() { fs.writeFileSync(GROUP_REQUESTS_FILE, JSON.stringify(groupRequests, null, 2)); }
 
 // Регистрация
 app.post('/register', async (req, res) => {
@@ -101,6 +105,44 @@ app.post('/create-chat', (req, res) => {
     res.json({ chatId });
 });
 
+// Добавить участника в чат (группу/канал)
+app.post('/add-member', (req, res) => {
+    const { chatId, memberLogin } = req.body;
+    const chat = globalChats.find(c => c.id === chatId);
+    if (chat && !chat.members.includes(memberLogin)) {
+        chat.members.push(memberLogin);
+        saveChats();
+        res.json({ success: true });
+    } else res.json({ error: 'Чат не найден или участник уже добавлен' });
+});
+
+// Запрос на вступление в группу
+app.post('/request-group-join', (req, res) => {
+    const { groupId, fromUser, toUser } = req.body;
+    if (!groupRequests[toUser]) groupRequests[toUser] = [];
+    groupRequests[toUser].push({ groupId, fromUser });
+    saveGroupRequests();
+    io.emit('groupRequest', { groupId, fromUser, toUser });
+    res.json({ success: true });
+});
+
+// Принять/отклонить запрос в группу
+app.post('/respond-group-request', (req, res) => {
+    const { groupId, fromUser, toUser, accept } = req.body;
+    if (accept) {
+        const chat = globalChats.find(c => c.id === groupId);
+        if (chat && !chat.members.includes(fromUser)) {
+            chat.members.push(fromUser);
+            saveChats();
+        }
+    }
+    if (groupRequests[toUser]) {
+        groupRequests[toUser] = groupRequests[toUser].filter(r => !(r.groupId === groupId && r.fromUser === fromUser));
+        saveGroupRequests();
+    }
+    res.json({ success: true });
+});
+
 // Получить все чаты
 app.get('/chats', (req, res) => res.json(globalChats));
 
@@ -157,6 +199,26 @@ app.get('/friends/:login', (req, res) => {
 
 app.get('/friend-requests/:login', (req, res) => {
     res.json({ requests: friendRequests[req.params.login] || [] });
+});
+
+app.get('/group-requests/:login', (req, res) => {
+    res.json({ requests: groupRequests[req.params.login] || [] });
+});
+
+// Удаление чата
+app.post('/delete-chat', (req, res) => {
+    const { chatId, userId } = req.body;
+    const chatIndex = globalChats.findIndex(c => c.id === chatId);
+    if (chatIndex !== -1) {
+        const chat = globalChats[chatIndex];
+        if (chat.creator === userId) {
+            globalChats.splice(chatIndex, 1);
+            delete messages[chatId];
+            saveChats();
+            saveMessages();
+            res.json({ success: true });
+        } else res.json({ error: 'Только создатель может удалить чат' });
+    } else res.json({ error: 'Чат не найден' });
 });
 
 // Socket.io
