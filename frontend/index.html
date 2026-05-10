@@ -932,7 +932,7 @@
         modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
     }
 
-    // ========== ГЛАВНАЯ ФУНКЦИЯ ПОИСКА (РАБОТАЕТ) ==========
+    // ========== ГЛАВНАЯ ФУНКЦИЯ ПОИСКА (ИСПРАВЛЕНА) ==========
     async function performSearch() {
         const query = document.getElementById('searchInput').value.trim().toLowerCase();
         const container = document.getElementById('chatsList');
@@ -951,7 +951,9 @@
         const items = container.querySelectorAll('.chat-item:not(#temp-search-result)');
         items.forEach(item => {
             const name = item.querySelector('.chat-info span:last-child')?.innerText.toLowerCase() || '';
-            item.style.display = name.includes(query) ? 'flex' : 'none';
+            if (item.style) {
+                item.style.display = name.includes(query) ? 'flex' : 'none';
+            }
         });
         
         // Ищем пользователя через сервер
@@ -974,11 +976,11 @@
                     document.getElementById('searchInput').value = '';
                     performSearch();
                 };
-                container.prepend(userDiv);
-            } else if (data.found && data.login === currentUser) {
-                console.log('Это вы сами');
-            } else {
-                console.log('Пользователь не найден');
+                if (container.firstChild) {
+                    container.insertBefore(userDiv, container.firstChild);
+                } else {
+                    container.appendChild(userDiv);
+                }
             }
         } catch (err) {
             console.error('Ошибка поиска:', err);
@@ -1006,7 +1008,11 @@
                 document.getElementById('searchInput').value = '';
                 performSearch();
             };
-            container.prepend(groupDiv);
+            if (container.firstChild) {
+                container.insertBefore(groupDiv, container.firstChild);
+            } else {
+                container.appendChild(groupDiv);
+            }
         }
         
         // Ищем канал
@@ -1031,7 +1037,11 @@
                 document.getElementById('searchInput').value = '';
                 performSearch();
             };
-            container.prepend(channelDiv);
+            if (container.firstChild) {
+                container.insertBefore(channelDiv, container.firstChild);
+            } else {
+                container.appendChild(channelDiv);
+            }
         }
     }
 
