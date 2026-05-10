@@ -505,7 +505,7 @@
         return `${now.getHours().toString().padStart(2,'0')}:${now.getMinutes().toString().padStart(2,'0')}, ${now.getDate().toString().padStart(2,'0')}.${(now.getMonth()+1).toString().padStart(2,'0')}.${now.getFullYear()}`;
     }
 
-    // ✅ ИСПРАВЛЕННАЯ ВАЛИДАЦИЯ
+    // ✅ ИСПРАВЛЕННАЯ ВАЛИДАЦИЯ — работает с любыми латинскими буквами, цифрами, _ + - ~
     function validateLogin(login) {
         const raw = login.startsWith('@') ? login.substring(1) : login;
         const regex = /^[a-zA-Z0-9_+\-~]+$/;
@@ -538,8 +538,10 @@
         `;
         document.getElementById('doLogin').onclick = async () => {
             let login = document.getElementById('login').value.trim();
+            if (!login) { showToast('Введите логин'); return; }
             if (!login.startsWith('@')) login = '@' + login;
             const password = document.getElementById('password').value;
+            if (!password) { showToast('Введите пароль'); return; }
             const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
             const data = await res.json();
             if (data.error) showToast(data.error);
@@ -560,12 +562,14 @@
             if (!loginRaw) { showToast('Введите логин'); return; }
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
             if (!validateLogin(login)) {
-                showToast('Логин: только латиница, цифры и символы _ + - ~ (3-20 символов)');
+                showToast('Логин должен содержать только латиницу (A-Z, a-z), цифры и символы _ + - ~ (3-20 символов)');
                 return;
             }
+            const password = document.getElementById('regPassword').value;
+            if (!password) { showToast('Введите пароль'); return; }
             const res = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({
                 login: login,
-                password: document.getElementById('regPassword').value,
+                password: password,
                 name: login,
                 surname: '',
                 birthdate: document.getElementById('regBirthdate').value,
@@ -782,7 +786,7 @@
             const name = modal.querySelector('#groupName').value.trim();
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
+            if (!validateLogin(login)) { showToast('Логин группы: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
             groups.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [currentUser] });
             saveGroups();
             showToast(`Группа "${name}" создана`);
@@ -818,7 +822,7 @@
             const name = modal.querySelector('#channelName').value.trim();
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            if (!validateLogin(login)) { showToast('Логин: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
+            if (!validateLogin(login)) { showToast('Логин канала: только латиница, цифры и _ + - ~ (3-20 символов)'); return; }
             channels.push({ id: Date.now(), login, name, avatar: selectedEmoji, theme, creator: currentUser, members: [] });
             saveChannels();
             showToast(`Канал "${name}" создан`);
