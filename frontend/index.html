@@ -72,12 +72,23 @@
             gap: 12px;
             cursor: pointer;
             transition: 0.2s;
+            position: relative;
         }
         .list-item:hover { background: rgba(0,255,255,0.15); border: 1px solid #0af; }
         .list-avatar { width: 44px; height: 44px; background: #0af; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; background-size: cover; background-position: center; }
         .list-info { flex: 1; }
-        .list-title { font-size: 16px; font-weight: bold; }
+        .list-title { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
         .list-sub { font-size: 11px; opacity: 0.6; }
+        .unread-badge {
+            background: #ff3333;
+            color: white;
+            border-radius: 20px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .unread-badge.muted { background: #666; }
         .request-badge { background: #ff6600; border-radius: 20px; padding: 2px 8px; font-size: 10px; margin-left: 8px; }
         .empty-state { text-align: center; padding: 20px; opacity: 0.5; }
         .add-btn {
@@ -92,8 +103,8 @@
         }
         .add-btn:hover { background: rgba(0,200,255,0.4); }
         .chat-panel { flex: 1; display: flex; flex-direction: column; background: rgba(6,12,24,0.4); }
-        .chat-header { padding: 16px 20px; border-bottom: 1px solid #0af; display: flex; justify-content: space-between; align-items: center; background: rgba(2,8,18,0.7); }
-        .chat-title { font-size: 18px; font-weight: bold; cursor: pointer; }
+        .chat-header { padding: 16px 20px; border-bottom: 1px solid #0af; display: flex; justify-content: space-between; align-items: center; background: rgba(2,8,18,0.7); cursor: pointer; }
+        .chat-title { font-size: 18px; font-weight: bold; }
         .chat-header-dots { background: none; border: none; color: cyan; font-size: 28px; cursor: pointer; padding: 4px 12px; }
         .chat-messages { flex: 1; padding: 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; position: relative; }
         .search-bar-container {
@@ -200,6 +211,18 @@
             width: 340px;
             text-align: center;
         }
+        .member-list { max-height: 200px; overflow-y: auto; margin-top: 12px; text-align: left; }
+        .member-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 8px;
+            border-radius: 20px;
+            background: rgba(0,255,255,0.05);
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        .member-item:hover { background: rgba(0,255,255,0.2); }
         .emoji-picker { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 12px 0; font-size: 28px; }
         .emoji-option { cursor: pointer; padding: 4px 8px; border-radius: 12px; }
         .emoji-option:hover { background: #0af; }
@@ -298,6 +321,8 @@
     let currentMatchIndex = -1;
     let activeLeftTab = 'profile';
     let allUsersList = [];
+    let unreadData = {};
+    let chatAvatars = {};
 
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
@@ -362,7 +387,12 @@
             const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
             const data = await res.json();
             if (data.error) showToast(data.error);
-            else { currentUser = data.login; currentUserData = data.user; startMessenger(); }
+            else { 
+                currentUser = data.login; 
+                currentUserData = data.user; 
+                localStorage.setItem('authToken', data.user.token);
+                startMessenger(); 
+            }
         };
     }
 
@@ -380,7 +410,11 @@
             const res = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password, name: login, surname: '', birthdate: document.getElementById('regBirthdate').value, about: document.getElementById('regAbout').value, favoriteGames: [] }) });
             const data = await res.json();
             if (data.error) showToast(data.error);
-            else { showToast('Регистрация успешна! Войдите'); showLogin(); }
+            else { 
+                showToast('Регистрация успешна! Войдите'); 
+                localStorage.setItem('authToken', data.token);
+                showLogin(); 
+            }
         };
     }
 
@@ -394,10 +428,18 @@
             }),
             fetch(`/friends/${currentUser}`).then(r => r.json()).then(data => { friends = data.friends || []; }),
             fetch(`/friend-requests/${currentUser}`).then(r => r.json()).then(data => { friendRequests = data.requests || []; }),
-            fetch(`/group-requests/${currentUser}`).then(r => r.json()).then(data => { groupJoinRequests = data.requests || []; })
+            fetch(`/group-requests/${currentUser}`).then(r => r.json()).then(data => { groupJoinRequests = data.requests || []; }),
+            fetch(`/unread/${currentUser}`).then(r => r.json()).then(data => { unreadData = data.unread || {}; })
         ]);
         renderLeftPanelContent();
         renderJoinRequestsInMenu();
+    }
+
+    function getUnreadCount(chatId) {
+        const count = unreadData[chatId] || 0;
+        const isMuted = mutedChats[chatId];
+        if (count === 0) return '';
+        return `<span class="unread-badge ${isMuted ? 'muted' : ''}">${count}</span>`;
     }
 
     function renderJoinRequestsInMenu() {
@@ -439,8 +481,7 @@
             };
         });
     }
-
-    function renderLeftPanelContent() {
+        function renderLeftPanelContent() {
         const container = document.getElementById('listContainer');
         const query = document.getElementById('leftSearchInput')?.value.toLowerCase() || '';
         if (!container) return;
@@ -580,16 +621,31 @@
             container.innerHTML += '<div class="empty-state">Нет чатов</div>';
         } else {
             filteredChats.forEach(chat => {
+                let displayName = chat.name;
+                let avatar = chat.avatar || '💬';
+                if (!chat.isGroup && !chat.isChannel && chat.id !== 'favorites') {
+                    const otherUser = chat.members?.find(m => m !== currentUser);
+                    if (otherUser) {
+                        displayName = otherUser;
+                        const otherAvatar = userAvatars[otherUser];
+                        if (otherAvatar) avatar = `<div class="list-avatar" style="background-image:url(${otherAvatar}); background-size:cover;"></div>`;
+                        else avatar = `<div class="list-avatar">👤</div>`;
+                    }
+                }
+                const unreadHtml = getUnreadCount(chat.id);
                 const div = document.createElement('div');
                 div.className = 'list-item';
-                div.innerHTML = `<div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${chat.avatar || '💬'}</div>
-                    <div class="list-info"><div class="list-title">${chat.name}</div><div class="list-sub">${chat.isGroup ? 'Группа' : (chat.isChannel ? 'Канал' : 'Личный чат')}</div></div>`;
+                div.innerHTML = typeof avatar === 'string' && avatar.startsWith('<') ? avatar : `<div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${avatar}</div>`;
+                div.innerHTML += `<div class="list-info"><div class="list-title">${displayName} ${unreadHtml}</div><div class="list-sub">${chat.isGroup ? 'Группа' : (chat.isChannel ? 'Канал' : 'Личный чат')}</div></div>`;
                 div.onclick = () => {
                     currentChat = chat.id;
-                    currentChatName = chat.name;
-                    document.getElementById('chatTitle').innerText = chat.name;
+                    currentChatName = displayName;
+                    document.getElementById('chatTitle').innerText = displayName;
                     loadMessages();
                     socket.emit('join', currentChat);
+                    socket.emit('markRead', { chatId: currentChat, user: currentUser });
+                    unreadData[currentChat] = 0;
+                    renderLeftPanelContent();
                 };
                 container.appendChild(div);
             });
@@ -703,8 +759,8 @@
                     }
                     if (chat) {
                         currentChat = chat.id;
-                        currentChatName = chat.name;
-                        document.getElementById('chatTitle').innerText = chat.name;
+                        currentChatName = login;
+                        document.getElementById('chatTitle').innerText = login;
                         loadMessages();
                         socket.emit('join', currentChat);
                     }
@@ -726,8 +782,8 @@
                 <h2>${channel.name}</h2>
                 <p>@${channel.login || channel.id}</p>
                 <div><strong>🎮 Тематика:</strong> ${channel.theme || 'не указана'}</div>
-                ${!isSubscribed ? '<button id="subscribeBtn" class="auth-btn">➕ Подписаться</button>' : '<button id="openBtn" class="auth-btn">💬 Открыть канал</button>'}
-                <button id="closeBtn" class="auth-btn">Закрыть</button>
+                <div><strong>👥 Подписчиков:</strong> ${channel.members?.length || 0}</div>
+                ${!isSubscribed ? '<button id="subscribeBtn" class="auth-btn">➕ Подписаться</button>' : '<button id="closeBtn" class="auth-btn">Закрыть</button>'}
             </div>
         `;
         document.body.appendChild(modal);
@@ -739,17 +795,8 @@
                 modal.remove();
             };
         } else {
-            document.getElementById('openBtn').onclick = () => {
-                currentChat = channel.id;
-                currentChatName = channel.name;
-                document.getElementById('chatTitle').innerText = channel.name;
-                if (!messagesData[currentChat]) messagesData[currentChat] = [];
-                loadMessages();
-                socket.emit('join', currentChat);
-                modal.remove();
-            };
+            document.getElementById('closeBtn').onclick = () => modal.remove();
         }
-        document.getElementById('closeBtn').onclick = () => modal.remove();
     }
 
     function showGroupProfile(groupId) {
@@ -759,6 +806,12 @@
         const isOwner = group.creator === currentUser;
         const modal = document.createElement('div');
         modal.className = 'modal';
+        const membersList = (group.members || []).map(m => `
+            <div class="member-item" onclick="showUserProfile('${m}')">
+                <div class="list-avatar" style="${userAvatars[m] ? `background-image:url(${userAvatars[m]}); background-size:cover;` : ''}">${!userAvatars[m] ? '👤' : ''}</div>
+                <div class="list-info"><div class="list-title">${m}</div></div>
+            </div>
+        `).join('');
         modal.innerHTML = `
             <div class="profile-card" style="width:340px;">
                 <div style="font-size:64px;">${group.avatar || '👥'}</div>
@@ -766,11 +819,9 @@
                 <p>@${group.login || group.id}</p>
                 <div><strong>🎮 Тематика:</strong> ${group.theme || 'не указана'}</div>
                 <div><strong>👥 Участники (${group.members?.length || 0}):</strong></div>
-                <div class="member-list" style="max-height:150px; overflow-y:auto; margin-top:8px; text-align:left;">
-                    ${(group.members || []).map(m => `<div style="padding:4px; border-bottom:1px solid rgba(0,255,255,0.1);">👤 ${m}</div>`).join('')}
-                </div>
+                <div class="member-list">${membersList || 'Нет участников'}</div>
                 ${!isMember && !isOwner ? '<button id="requestJoinBtn" class="auth-btn">📨 Отправить запрос на вступление</button>' : ''}
-                ${!isMember && !isOwner ? '<button id="cancelBtn" class="auth-btn">Закрыть</button>' : '<button id="closeBtn" class="auth-btn">Закрыть</button>'}
+                <button id="closeBtn" class="auth-btn">Закрыть</button>
             </div>
         `;
         document.body.appendChild(modal);
@@ -780,12 +831,11 @@
                 showToast(`Запрос на вступление отправлен создателю группы ${group.creator}`);
                 modal.remove();
             };
-            document.getElementById('cancelBtn').onclick = () => modal.remove();
-        } else {
-            document.getElementById('closeBtn').onclick = () => modal.remove();
         }
+        document.getElementById('closeBtn').onclick = () => modal.remove();
     }
-        function showCreateGroupModal() {
+
+    function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modal = document.createElement('div');
         modal.className = 'modal';
@@ -811,7 +861,7 @@
             const name = modal.querySelector('#groupName').value.trim();
             const theme = modal.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isGroup: true }) });
+            const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isGroup: true }) });
             await loadAllData();
             showToast(`Группа "${name}" создана`);
             modal.remove();
@@ -845,7 +895,7 @@
             const name = modal.querySelector('#channelName').value.trim();
             const theme = modal.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [], isChannel: true }) });
+            await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isChannel: true }) });
             await loadAllData();
             showToast(`Канал "${name}" создан`);
             modal.remove();
@@ -1166,20 +1216,14 @@
         const isFavorites = currentChat === 'favorites';
         const currentChatObj = allChats.find(c => c.id === currentChat);
         const isGroup = currentChatObj?.isGroup === true;
-        const isCreator = isGroup && currentChatObj?.creator === currentUser;
+        const isOwner = isGroup && currentChatObj?.creator === currentUser;
         let html = `<div id="menuClear" style="padding:8px 16px; cursor:pointer;">🧹 Очистить чат</div>`;
-        if (isGroup && isCreator) html += `<div id="menuAddSubgroup" style="padding:8px 16px; cursor:pointer;">➕ Добавить подгруппу</div>`;
+        if (isGroup && isOwner) html += `<div id="menuAddSubgroup" style="padding:8px 16px; cursor:pointer;">➕ Добавить подгруппу</div>`;
         html += `<div id="menuSearch" style="padding:8px 16px; cursor:pointer;">🔍 Поиск в чате</div><div id="menuNotifications" style="padding:8px 16px; cursor:pointer;">${isMuted ? '🔔 Вкл уведомления' : '🔕 Выкл уведомления'}</div>`;
         if (!isFavorites && currentChatObj && !currentChatObj.isChannel) html += `<div id="menuDelete" style="padding:8px 16px; cursor:pointer;">🗑 Удалить чат</div>`;
         menu.innerHTML = html;
         document.body.appendChild(menu);
         const rect = document.querySelector('.chat-header-dots').getBoundingClientRect();
-        menu.style.position = 'fixed';
-        menu.style.background = '#0a1428';
-        menu.style.border = '1px solid #0af';
-        menu.style.borderRadius = '16px';
-        menu.style.padding = '8px';
-        menu.style.zIndex = '200';
         menu.style.left = rect.left - 120 + 'px';
         menu.style.top = rect.bottom + 5 + 'px';
         menu.querySelector('#menuClear').onclick = () => {
@@ -1193,7 +1237,7 @@
             });
             menu.remove();
         };
-        if (isGroup && isCreator && menu.querySelector('#menuAddSubgroup')) menu.querySelector('#menuAddSubgroup').onclick = () => { showAddSubgroupModal(currentChat, currentChatName); menu.remove(); };
+        if (isGroup && isOwner && menu.querySelector('#menuAddSubgroup')) menu.querySelector('#menuAddSubgroup').onclick = () => { showAddSubgroupModal(currentChat, currentChatName); menu.remove(); };
         menu.querySelector('#menuSearch').onclick = () => { openSearch(); menu.remove(); };
         menu.querySelector('#menuNotifications').onclick = () => {
             mutedChats[currentChat] = !mutedChats[currentChat];
@@ -1213,6 +1257,7 @@
             if (!messagesData[currentChat]) messagesData[currentChat] = [];
             messagesData[currentChat].push(msg);
             renderMessages();
+            loadAllData();
             if (!mutedChats[currentChat] && msg.from !== currentUser) {
                 const audio = new Audio('/sounds/notifica.mp3');
                 audio.play().catch(()=>{});
@@ -1235,6 +1280,7 @@
                 loadAllData();
             }
         });
+        socket.on('updateUnread', () => { loadAllData(); });
 
         document.getElementById('app').innerHTML = `
             <button class="burger-btn" id="burgerBtn">☰</button>
@@ -1256,7 +1302,7 @@
                     <div class="add-btn" id="createChannelBtn">📢 Создать канал</div>
                 </div>
                 <div class="chat-panel" id="chatContainer">
-                    <div class="chat-header">
+                    <div class="chat-header" id="chatHeader">
                         <span class="chat-title" id="chatTitle">${currentChatName}</span>
                         <button class="chat-header-dots" id="chatMenuBtn">⋯</button>
                     </div>
@@ -1268,8 +1314,8 @@
                     <div class="chat-input">
                         <button id="emojiBtn">😀</button>
                         <button id="attachBtn">📎</button>
-                        <button id="voiceBtn">🎙️</button>
                         <input type="text" id="msgInput" placeholder="Введите сообщение...">
+                        <button id="voiceBtn">🎙️</button>
                         <button id="sendBtn">➤</button>
                         <div id="voiceRecBar" style="display:none; align-items:center; gap:12px; flex:1;">
                             <div class="voice-wave"><div id="voiceWaveFill" class="voice-wave-fill"></div></div>
@@ -1298,13 +1344,40 @@
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerHTML = '<span></span><button id="cancelReplyBtn" style="display:none;">✖ Отмена</button>'; };
         document.getElementById('msgInput').addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
         document.getElementById('chatMenuBtn').onclick = showChatMenu;
+        document.getElementById('chatHeader').onclick = async () => {
+            const chat = allChats.find(c => c.id === currentChat);
+            if (!chat || currentChat === 'favorites') return showToast('Избранное — личные заметки');
+            if (chat.isChannel) {
+                showChannelProfile(chat.id);
+            } else if (chat.isGroup) {
+                showGroupProfile(chat.id);
+            } else {
+                const otherUser = chat.members?.find(m => m !== currentUser);
+                if (otherUser) showUserProfile(otherUser);
+                else showToast('Профиль чата');
+            }
+        };
 
         renderLeftPanelContent();
         loadMessages();
         socket.emit('join', currentChat);
     }
 
-    renderAuth();
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        fetch('/auto-login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ token }) })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    currentUser = data.login;
+                    currentUserData = data.user;
+                    startMessenger();
+                } else renderAuth();
+            })
+            .catch(() => renderAuth());
+    } else {
+        renderAuth();
+    }
 </script>
 </body>
 </html>
