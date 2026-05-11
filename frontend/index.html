@@ -53,23 +53,6 @@
         }
         .icon-item:hover { background: rgba(0,255,255,0.3); transform: scale(1.05); box-shadow: 0 0 10px cyan; }
         .icon-item.active { background: #0af; color: black; box-shadow: 0 0 15px cyan; }
-        .friend-request-badge {
-            position: absolute;
-            top: -5px;
-            right: -5px;
-            background: #ff3333;
-            color: white;
-            border-radius: 50%;
-            min-width: 20px;
-            height: 20px;
-            font-size: 11px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 0 5px;
-            border: 1px solid white;
-        }
         .content-panel {
             width: 340px;
             background: rgba(2,8,18,0.5);
@@ -500,7 +483,7 @@
         const container = document.getElementById('joinRequestsContainer');
         if (!container) return;
         if (groupJoinRequests.length === 0) {
-            container.innerHTML = '<div class="empty-state" style="padding:8px;">Нет заявок</div>';
+            container.innerHTML = '<div class="empty-state" style="padding:8px;">Нет заявок в группы</div>';
             return;
         }
         container.innerHTML = groupJoinRequests.map(req => `
@@ -620,7 +603,7 @@
             container.innerHTML = filtered.map(c => `
                 <div class="list-item" onclick="window.showChannelProfile('${c.id}')">
                     <div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${c.avatar || '📢'}</div>
-                    <div class="list-info"><div class="list-title">${c.name}</div><div class="list-sub">@${c.login || c.id}</div></div>
+                    <div class="list-info"><div class="list-title">${c.name}</div><div class="list-sub">@${(c.login || c.id).replace(/^@+/, '')}</div></div>
                 </div>
             `).join('') + `<div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>`;
             renderChatsListInPanel(container, query);
@@ -638,7 +621,7 @@
             container.innerHTML = filtered.map(g => `
                 <div class="list-item" onclick="window.showGroupProfile('${g.id}')">
                     <div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${g.avatar || '👥'}</div>
-                    <div class="list-info"><div class="list-title">${g.name}</div><div class="list-sub">@${g.login || g.id}</div></div>
+                    <div class="list-info"><div class="list-title">${g.name}</div><div class="list-sub">@${(g.login || g.id).replace(/^@+/, '')}</div></div>
                 </div>
             `).join('') + `<div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>`;
             renderChatsListInPanel(container, query);
@@ -647,51 +630,20 @@
     }
 
     function renderFriendsListInPanel(container) {
-        if ((!friends || friends.length === 0) && (!friendRequests || friendRequests.length === 0)) {
+        if (!friends || friends.length === 0) {
             container.innerHTML += '<div class="empty-state">Нет друзей</div>';
             return;
         }
-        if (friendRequests && friendRequests.length > 0) {
-            friendRequests.forEach(from => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
-                    <div class="list-avatar" style="${userAvatars[from] ? `background-image:url(${userAvatars[from]}); background-size:cover;` : ''}">${!userAvatars[from] ? '👤' : ''}</div>
-                    <div class="list-info">
-                        <div class="list-title">${from} <span class="request-badge">хочет подружиться</span></div>
-                        <div class="list-sub" style="display:flex; gap:8px; margin-top:4px;">
-                            <button class="accept-request" data-login="${from}" style="background:#0af; border:none; border-radius:20px; padding:4px 12px;">✅ Принять</button>
-                            <button class="decline-request" data-login="${from}" style="background:#ff6600; border:none; border-radius:20px; padding:4px 12px;">❌ Отклонить</button>
-                        </div>
-                    </div>
-                `;
-                container.appendChild(div);
-                div.querySelector('.accept-request').onclick = async (e) => {
-                    e.stopPropagation();
-                    await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
-                    await loadAllData();
-                    showToast(`Вы приняли заявку от ${from}`);
-                };
-                div.querySelector('.decline-request').onclick = async (e) => {
-                    e.stopPropagation();
-                    await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
-                    await loadAllData();
-                    showToast(`Заявка от ${from} отклонена`);
-                };
-            });
-        }
-        if (friends && friends.length > 0) {
-            friends.forEach(login => {
-                const div = document.createElement('div');
-                div.className = 'list-item';
-                div.innerHTML = `
-                    <div class="list-avatar" style="${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}</div>
-                    <div class="list-info"><div class="list-title">${login}</div><div class="list-sub">друг</div></div>
-                `;
-                div.onclick = () => { window.showUserProfile(login); };
-                container.appendChild(div);
-            });
-        }
+        friends.forEach(login => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <div class="list-avatar" style="${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}</div>
+                <div class="list-info"><div class="list-title">${login}</div><div class="list-sub">друг</div></div>
+            `;
+            div.onclick = () => { window.showUserProfile(login); };
+            container.appendChild(div);
+        });
     }
 
     function renderChatsListInPanel(container, query) {
@@ -800,7 +752,7 @@
         document.getElementById('cancelEditBtn').onclick = () => modalDiv.remove();
     }
 
-    window.showUserProfile = function(login) {
+    window.showUserProfile = function(login, parentModalToClose = null) {
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
             .then(r => r.json())
             .then(data => {
@@ -827,6 +779,7 @@
                         await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
                         showToast(`Заявка в друзья отправлена пользователю ${login}`);
                         modalDiv.remove();
+                        if (parentModalToClose) parentModalToClose.remove();
                         await loadAllData();
                     } else if (isFriend) {
                         showToast('Удаление друга пока не реализовано');
@@ -850,8 +803,12 @@
                         socket.emit('join', currentChat);
                     }
                     modalDiv.remove();
+                    if (parentModalToClose) parentModalToClose.remove();
                 };
-                document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
+                document.getElementById('closeProfileBtn').onclick = () => {
+                    modalDiv.remove();
+                    if (parentModalToClose) parentModalToClose.remove();
+                };
             });
     };
 
@@ -892,7 +849,7 @@
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal';
         const membersList = (group.members || []).filter(m => m !== currentUser).map(m => `
-            <div class="member-item" onclick="window.showUserProfileFromGroup('${m}', this.closest('.modal'))">
+            <div class="member-item" onclick="window.showUserProfile('${m}', this.closest('.modal'))">
                 <div class="list-avatar" style="${userAvatars[m] ? `background-image:url(${userAvatars[m]}); background-size:cover;` : ''}">${!userAvatars[m] ? '👤' : ''}</div>
                 <div class="list-info"><div class="list-title">${m}</div></div>
             </div>
@@ -918,62 +875,6 @@
             };
         }
         document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
-    };
-    
-    window.showUserProfileFromGroup = function(login, modalElement) {
-        fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.found) { showToast('Пользователь не найден'); return; }
-                const avatar = userAvatars[login] || null;
-                const isFriend = friends?.includes(login);
-                const requestSent = friendRequests?.includes(login);
-                const profileModal = document.createElement('div');
-                profileModal.className = 'modal';
-                profileModal.innerHTML = `
-                    <div class="profile-card">
-                        <div class="avatar" style="width:80px; height:80px; font-size:40px; margin:0 auto; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div>
-                        <h2>${data.login}</h2>
-                        <div><strong>📅 Дата рождения:</strong> ${data.birthdate || 'не указана'}</div>
-                        <div><strong>📝 О себе:</strong> ${data.about || 'не указано'}</div>
-                        <button id="friendBtn" class="auth-btn">${isFriend ? '❌ Удалить из друзей' : (requestSent ? '⏳ Заявка отправлена' : '➕ Добавить в друзья')}</button>
-                        <button id="msgBtn" class="auth-btn">💬 Написать сообщение</button>
-                        <button id="closeProfileBtn" class="auth-btn">Закрыть</button>
-                    </div>
-                `;
-                document.body.appendChild(profileModal);
-                document.getElementById('friendBtn').onclick = async () => {
-                    if (!isFriend && !requestSent) {
-                        await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
-                        showToast(`Заявка в друзья отправлена пользователю ${login}`);
-                        profileModal.remove();
-                        await loadAllData();
-                    } else if (isFriend) {
-                        showToast('Удаление друга пока не реализовано');
-                    } else {
-                        showToast('Заявка уже отправлена');
-                    }
-                };
-                document.getElementById('msgBtn').onclick = async () => {
-                    let chat = allChats.find(c => c.members && c.members.includes(currentUser) && c.members.includes(login) && !c.isGroup && !c.isChannel);
-                    if (!chat) {
-                        const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: login, avatar: '💬', creator: currentUser, members: [currentUser, login], isGroup: false, isChannel: false }) });
-                        const data = await res.json();
-                        await loadAllData();
-                        chat = allChats.find(c => c.id === data.chatId);
-                    }
-                    if (chat) {
-                        currentChat = chat.id;
-                        currentChatName = login;
-                        document.getElementById('chatTitle').innerText = login;
-                        loadMessages();
-                        socket.emit('join', currentChat);
-                    }
-                    profileModal.remove();
-                    if (modalElement) modalElement.remove();
-                };
-                document.getElementById('closeProfileBtn').onclick = () => profileModal.remove();
-            });
     };
 
     function showCreateGroupModal() {
@@ -1293,11 +1194,13 @@
     function showFriendsList() {
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal';
-        modalDiv.innerHTML = `<div class="modal-box" style="width:350px;"><h3>👥 Друзья</h3><div id="friendsContainer" style="max-height:400px; overflow-y:auto;"></div><button id="closeFriends" class="auth-btn" style="margin-top:16px;">Закрыть</button></div>`;
+        modalDiv.innerHTML = `<div class="modal-box" style="width:350px;"><h3>👥 Друзья</h3><div id="friendsContainer" style="max-height:400px; overflow-y:auto;"></div><div id="friendRequestsContainer" style="margin-top:16px;"><h4>📨 Заявки в друзья</h4><div id="friendRequestsList"></div></div><button id="closeFriends" class="auth-btn" style="margin-top:16px;">Закрыть</button></div>`;
         document.body.appendChild(modalDiv);
-        const container = modalDiv.querySelector('#friendsContainer');
-        if (!friends || friends.length === 0) container.innerHTML = '<p style="text-align:center;">Нет друзей</p>';
-        else {
+        
+        const friendsContainer = modalDiv.querySelector('#friendsContainer');
+        if (!friends || friends.length === 0) {
+            friendsContainer.innerHTML = '<p style="text-align:center;">Нет друзей</p>';
+        } else {
             friends.forEach(login => {
                 const avatar = userAvatars[login] || null;
                 const div = document.createElement('div');
@@ -1305,9 +1208,53 @@
                 div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; cursor:pointer; border-radius:20px; margin:5px 0; background:rgba(0,255,255,0.05);';
                 div.innerHTML = `<div class="friend-avatar" style="width:40px; height:40px; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div><div><strong>${login}</strong></div>`;
                 div.onclick = () => { modalDiv.remove(); window.showUserProfile(login); };
-                container.appendChild(div);
+                friendsContainer.appendChild(div);
             });
         }
+        
+        const requestsContainer = modalDiv.querySelector('#friendRequestsList');
+        if (!friendRequests || friendRequests.length === 0) {
+            requestsContainer.innerHTML = '<p style="text-align:center;">Нет заявок</p>';
+        } else {
+            friendRequests.forEach(from => {
+                const avatar = userAvatars[from] || null;
+                const div = document.createElement('div');
+                div.className = 'friend-request-item
+                                    div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; border-radius:20px; margin:5px 0; background:rgba(255,100,0,0.2);';
+                div.innerHTML = `
+                    <div class="friend-avatar" style="width:40px; height:40px; background:#ff6600; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '❓' : ''}</div>
+                    <div style="flex:1;"><strong>${from}</strong><br><small>хочет добавить в друзья</small></div>
+                    <div style="display:flex; gap:8px;">
+                        <button class="accept-friend-request" data-login="${from}" style="background:#0af; border:none; border-radius:20px; padding:6px 12px; cursor:pointer;">✅</button>
+                        <button class="decline-friend-request" data-login="${from}" style="background:#ff6600; border:none; border-radius:20px; padding:6px 12px; cursor:pointer;">❌</button>
+                    </div>
+                `;
+                requestsContainer.appendChild(div);
+            });
+            
+            modalDiv.querySelectorAll('.accept-friend-request').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const from = btn.dataset.login;
+                    await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
+                    await loadAllData();
+                    modalDiv.remove();
+                    showToast(`Вы приняли заявку от ${from}`);
+                };
+            });
+            
+            modalDiv.querySelectorAll('.decline-friend-request').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const from = btn.dataset.login;
+                    await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
+                    await loadAllData();
+                    modalDiv.remove();
+                    showToast(`Заявка от ${from} отклонена`);
+                };
+            });
+        }
+        
         modalDiv.querySelector('#closeFriends').onclick = () => modalDiv.remove();
     }
 
