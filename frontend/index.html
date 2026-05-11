@@ -670,14 +670,12 @@
                     e.stopPropagation();
                     await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
                     await loadAllData();
-                    renderLeftPanelContent();
                     showToast(`Вы приняли заявку от ${from}`);
                 };
                 div.querySelector('.decline-request').onclick = async (e) => {
                     e.stopPropagation();
                     await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
                     await loadAllData();
-                    renderLeftPanelContent();
                     showToast(`Заявка от ${from} отклонена`);
                 };
             });
@@ -867,7 +865,7 @@
             <div class="profile-card">
                 <div style="font-size:64px;">${channel.avatar || '📢'}</div>
                 <h2>${channel.name}</h2>
-                <p>@${channel.login || channel.id}</p>
+                <p>@${(channel.login || channel.id).replace(/^@+/, '')}</p>
                 <div><strong>🎮 Тематика:</strong> ${channel.theme || 'не указана'}</div>
                 <div><strong>👥 Подписчиков:</strong> ${channel.members?.length || 0}</div>
                 ${!isSubscribed ? '<button id="subscribeBtn" class="auth-btn">➕ Подписаться</button>' : ''}
@@ -894,7 +892,7 @@
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal';
         const membersList = (group.members || []).filter(m => m !== currentUser).map(m => `
-            <div class="member-item" onclick="window.showUserProfile('${m}'); modalDiv.remove();">
+            <div class="member-item" onclick="window.showUserProfileFromGroup('${m}', this.closest('.modal'))">
                 <div class="list-avatar" style="${userAvatars[m] ? `background-image:url(${userAvatars[m]}); background-size:cover;` : ''}">${!userAvatars[m] ? '👤' : ''}</div>
                 <div class="list-info"><div class="list-title">${m}</div></div>
             </div>
@@ -903,7 +901,7 @@
             <div class="profile-card" style="width:340px;">
                 <div style="font-size:64px;">${group.avatar || '👥'}</div>
                 <h2>${group.name}</h2>
-                <p>@${group.login || group.id}</p>
+                <p>@${(group.login || group.id).replace(/^@+/, '')}</p>
                 <div><strong>🎮 Тематика:</strong> ${group.theme || 'не указана'}</div>
                 <div><strong>👥 Участники (${(group.members?.length || 0) - 1}):</strong></div>
                 <div class="member-list">${membersList || 'Нет других участников'}</div>
@@ -920,6 +918,62 @@
             };
         }
         document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
+    };
+    
+    window.showUserProfileFromGroup = function(login, modalElement) {
+        fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.found) { showToast('Пользователь не найден'); return; }
+                const avatar = userAvatars[login] || null;
+                const isFriend = friends?.includes(login);
+                const requestSent = friendRequests?.includes(login);
+                const profileModal = document.createElement('div');
+                profileModal.className = 'modal';
+                profileModal.innerHTML = `
+                    <div class="profile-card">
+                        <div class="avatar" style="width:80px; height:80px; font-size:40px; margin:0 auto; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div>
+                        <h2>${data.login}</h2>
+                        <div><strong>📅 Дата рождения:</strong> ${data.birthdate || 'не указана'}</div>
+                        <div><strong>📝 О себе:</strong> ${data.about || 'не указано'}</div>
+                        <button id="friendBtn" class="auth-btn">${isFriend ? '❌ Удалить из друзей' : (requestSent ? '⏳ Заявка отправлена' : '➕ Добавить в друзья')}</button>
+                        <button id="msgBtn" class="auth-btn">💬 Написать сообщение</button>
+                        <button id="closeProfileBtn" class="auth-btn">Закрыть</button>
+                    </div>
+                `;
+                document.body.appendChild(profileModal);
+                document.getElementById('friendBtn').onclick = async () => {
+                    if (!isFriend && !requestSent) {
+                        await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
+                        showToast(`Заявка в друзья отправлена пользователю ${login}`);
+                        profileModal.remove();
+                        await loadAllData();
+                    } else if (isFriend) {
+                        showToast('Удаление друга пока не реализовано');
+                    } else {
+                        showToast('Заявка уже отправлена');
+                    }
+                };
+                document.getElementById('msgBtn').onclick = async () => {
+                    let chat = allChats.find(c => c.members && c.members.includes(currentUser) && c.members.includes(login) && !c.isGroup && !c.isChannel);
+                    if (!chat) {
+                        const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: login, avatar: '💬', creator: currentUser, members: [currentUser, login], isGroup: false, isChannel: false }) });
+                        const data = await res.json();
+                        await loadAllData();
+                        chat = allChats.find(c => c.id === data.chatId);
+                    }
+                    if (chat) {
+                        currentChat = chat.id;
+                        currentChatName = login;
+                        document.getElementById('chatTitle').innerText = login;
+                        loadMessages();
+                        socket.emit('join', currentChat);
+                    }
+                    profileModal.remove();
+                    if (modalElement) modalElement.remove();
+                };
+                document.getElementById('closeProfileBtn').onclick = () => profileModal.remove();
+            });
     };
 
     function showCreateGroupModal() {
@@ -945,6 +999,7 @@
         modalDiv.querySelector('#confirmCreateGroup').onclick = async () => {
             let loginRaw = modalDiv.querySelector('#groupLogin').value.trim();
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
+            login = login.replace(/^@+/, '@');
             const name = modalDiv.querySelector('#groupName').value.trim();
             const theme = modalDiv.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
@@ -979,6 +1034,7 @@
         modalDiv.querySelector('#confirmCreateChannel').onclick = async () => {
             let loginRaw = modalDiv.querySelector('#channelLogin').value.trim();
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
+            login = login.replace(/^@+/, '@');
             const name = modalDiv.querySelector('#channelName').value.trim();
             const theme = modalDiv.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
@@ -1255,6 +1311,26 @@
         modalDiv.querySelector('#closeFriends').onclick = () => modalDiv.remove();
     }
 
+    async function leaveChannel(chatId, chatName) {
+        showConfirmDialog(`Выйти из канала "${chatName}"?`, async () => {
+            const chat = allChats.find(c => c.id === chatId);
+            if (chat && chat.members) {
+                const newMembers = chat.members.filter(m => m !== currentUser);
+                chat.members = newMembers;
+                await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, memberLogin: currentUser }) });
+                await loadAllData();
+                if (currentChat === chatId) {
+                    currentChat = 'favorites';
+                    currentChatName = 'Избранное';
+                    document.getElementById('chatTitle').innerText = 'Избранное';
+                    loadMessages();
+                    socket.emit('join', 'favorites');
+                }
+                showToast(`Вы вышли из канала "${chatName}"`);
+            }
+        });
+    }
+
     function deleteChat(chatId, chatName) {
         showConfirmDialog(`Удалить чат "${chatName}"?`, async () => {
             const res = await fetch('/delete-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, userId: currentUser }) });
@@ -1304,10 +1380,15 @@
         const isFavorites = currentChat === 'favorites';
         const currentChatObj = allChats.find(c => c.id === currentChat);
         const isGroup = currentChatObj?.isGroup === true;
+        const isChannel = currentChatObj?.isChannel === true;
         const isOwner = isGroup && currentChatObj?.creator === currentUser;
+        const isSubscriber = isChannel && currentChatObj?.members?.includes(currentUser);
         let html = `<div id="menuClear" style="padding:8px 16px; cursor:pointer;">🧹 Очистить чат</div>`;
         if (isGroup && isOwner) html += `<div id="menuAddSubgroup" style="padding:8px 16px; cursor:pointer;">➕ Добавить подгруппу</div>`;
         html += `<div id="menuSearch" style="padding:8px 16px; cursor:pointer;">🔍 Поиск в чате</div><div id="menuNotifications" style="padding:8px 16px; cursor:pointer;">${isMuted ? '🔔 Вкл уведомления' : '🔕 Выкл уведомления'}</div>`;
+        if (isChannel && isSubscriber && !isOwner) {
+            html += `<div id="menuLeaveChannel" style="padding:8px 16px; cursor:pointer;">🚪 Выйти из канала</div>`;
+        }
         if (!isFavorites && currentChatObj && !currentChatObj.isChannel) html += `<div id="menuDelete" style="padding:8px 16px; cursor:pointer;">🗑 Удалить чат</div>`;
         menu.innerHTML = html;
         document.body.appendChild(menu);
@@ -1333,6 +1414,9 @@
             renderLeftPanelContent();
             menu.remove();
         };
+        if (menu.querySelector('#menuLeaveChannel')) {
+            menu.querySelector('#menuLeaveChannel').onclick = () => { leaveChannel(currentChat, currentChatName); menu.remove(); };
+        }
         if (!isFavorites && menu.querySelector('#menuDelete')) menu.querySelector('#menuDelete').onclick = () => { deleteChat(currentChat, currentChatName); menu.remove(); };
         setTimeout(() => document.addEventListener('click', () => menu.remove(), { once: true }), 10);
     }
@@ -1346,7 +1430,8 @@
             messagesData[currentChat].push(msg);
             renderMessages();
             loadAllData();
-            if (!mutedChats[currentChat] && msg.from !== currentUser) {
+            const isChatMuted = mutedChats[currentChat];
+            if (!isChatMuted && msg.from !== currentUser) {
                 const audio = new Audio('/sounds/notifica.mp3');
                 audio.play().catch(()=>{});
                 document.title = '🔔 Новое сообщение';
