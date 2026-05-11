@@ -49,9 +49,27 @@
             font-size: 28px;
             cursor: pointer;
             transition: 0.2s;
+            position: relative;
         }
         .icon-item:hover { background: rgba(0,255,255,0.3); transform: scale(1.05); box-shadow: 0 0 10px cyan; }
         .icon-item.active { background: #0af; color: black; box-shadow: 0 0 15px cyan; }
+        .friend-request-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3333;
+            color: white;
+            border-radius: 50%;
+            min-width: 20px;
+            height: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 1px solid white;
+        }
         .content-panel {
             width: 340px;
             background: rgba(2,8,18,0.5);
@@ -277,6 +295,24 @@
             color: black;
             z-index: 25;
             box-shadow: 0 0 15px cyan;
+            position: relative;
+        }
+        .friends-icon .friend-request-count {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #ff3333;
+            color: white;
+            border-radius: 50%;
+            min-width: 22px;
+            height: 22px;
+            font-size: 12px;
+            font-weight: bold;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 0 5px;
+            border: 1px solid white;
         }
         .subgroup-item { margin-left: 28px; padding: 6px; font-size: 13px; border-radius: 16px; background: rgba(0,255,255,0.05); cursor: pointer; }
         .subgroup-item:hover { background: rgba(0,255,255,0.15); }
@@ -308,7 +344,7 @@
     let userAvatars = JSON.parse(localStorage.getItem('userAvatars') || '{}');
     let deletedChats = JSON.parse(localStorage.getItem('deletedChats') || '[]');
     let subgroups = JSON.parse(localStorage.getItem('subgroups') || '{}');
-    let friends = {};
+    let friends = [];
     let friendRequests = [];
     let groupJoinRequests = [];
     let groups = [];
@@ -322,7 +358,6 @@
     let activeLeftTab = 'profile';
     let allUsersList = [];
     let unreadData = {};
-    let chatAvatars = {};
 
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
@@ -431,8 +466,27 @@
             fetch(`/group-requests/${currentUser}`).then(r => r.json()).then(data => { groupJoinRequests = data.requests || []; }),
             fetch(`/unread/${currentUser}`).then(r => r.json()).then(data => { unreadData = data.unread || {}; })
         ]);
+        updateFriendRequestBadge();
         renderLeftPanelContent();
         renderJoinRequestsInMenu();
+    }
+
+    function updateFriendRequestBadge() {
+        const friendIcon = document.getElementById('friendsIcon');
+        if (!friendIcon) return;
+        let badge = friendIcon.querySelector('.friend-request-count');
+        const count = friendRequests.length;
+        if (!badge) {
+            badge = document.createElement('div');
+            badge.className = 'friend-request-count';
+            friendIcon.appendChild(badge);
+        }
+        if (count > 0) {
+            badge.innerText = count > 9 ? '9+' : count;
+            badge.style.display = 'flex';
+        } else {
+            badge.style.display = 'none';
+        }
     }
 
     function getUnreadCount(chatId) {
@@ -463,7 +517,8 @@
             </div>
         `).join('');
         document.querySelectorAll('.accept-group').forEach(btn => {
-            btn.onclick = async () => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
                 const groupId = btn.dataset.group;
                 const fromUser = btn.dataset.user;
                 await fetch('/respond-group-request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ groupId, fromUser, toUser: currentUser, accept: true }) });
@@ -472,7 +527,8 @@
             };
         });
         document.querySelectorAll('.decline-group').forEach(btn => {
-            btn.onclick = async () => {
+            btn.onclick = async (e) => {
+                e.stopPropagation();
                 const groupId = btn.dataset.group;
                 const fromUser = btn.dataset.user;
                 await fetch('/respond-group-request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ groupId, fromUser, toUser: currentUser, accept: false }) });
@@ -481,7 +537,8 @@
             };
         });
     }
-        function renderLeftPanelContent() {
+
+    function renderLeftPanelContent() {
         const container = document.getElementById('listContainer');
         const query = document.getElementById('leftSearchInput')?.value.toLowerCase() || '';
         if (!container) return;
@@ -490,7 +547,7 @@
             document.getElementById('contentTitle').innerText = '👤 Мой профиль';
             const avatarUrl = userAvatars[currentUser] || null;
             container.innerHTML = `
-                <div class="list-item" onclick="showMyProfile()">
+                <div class="list-item" onclick="window.showMyProfile()">
                     <div class="list-avatar" style="${avatarUrl ? `background-image:url(${avatarUrl}); background-size:cover;` : ''}">${!avatarUrl ? '⚡' : ''}</div>
                     <div class="list-info"><div class="list-title">${currentUser}</div><div class="list-sub">Нажмите для просмотра</div></div>
                 </div>
@@ -512,14 +569,43 @@
             }
             container.innerHTML = filtered.map(u => {
                 const requestSent = friendRequests?.includes(u.login);
+                const isFriend = friends?.includes(u.login);
+                let buttonHtml = '';
+                if (!isFriend && !requestSent) {
+                    buttonHtml = `<button class="send-friend-request-btn" data-login="${u.login}" style="background:#0af; border:none; border-radius:20px; padding:4px 12px; margin-top:6px;">➕ Добавить</button>`;
+                } else if (requestSent) {
+                    buttonHtml = `<span class="request-badge">⏳ заявка отправлена</span>`;
+                } else if (isFriend) {
+                    buttonHtml = `<span class="request-badge" style="background:#0af;">✅ друг</span>`;
+                }
                 return `
-                    <div class="list-item" onclick="showUserProfile('${u.login}')">
+                    <div class="list-item" data-login="${u.login}">
                         <div class="list-avatar" style="${userAvatars[u.login] ? `background-image:url(${userAvatars[u.login]}); background-size:cover;` : ''}">${!userAvatars[u.login] ? '👤' : ''}</div>
-                        <div class="list-info"><div class="list-title">${u.login}${requestSent ? ' <span class="request-badge">заявка отправлена</span>' : ''}</div></div>
+                        <div class="list-info">
+                            <div class="list-title">${u.login}</div>
+                            ${buttonHtml}
+                        </div>
                     </div>
                 `;
             }).join('') + `<div class="section-header" style="margin-top:16px;">💬 ЧАТЫ</div>`;
             renderChatsListInPanel(container, query);
+            
+            document.querySelectorAll('.send-friend-request-btn').forEach(btn => {
+                btn.onclick = async (e) => {
+                    e.stopPropagation();
+                    const login = btn.dataset.login;
+                    await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
+                    showToast(`Заявка отправлена пользователю ${login}`);
+                    await loadAllData();
+                };
+            });
+            
+            document.querySelectorAll('.list-item[data-login]').forEach(item => {
+                item.onclick = () => {
+                    const login = item.dataset.login;
+                    window.showUserProfile(login);
+                };
+            });
             return;
         }
 
@@ -532,7 +618,7 @@
                 return;
             }
             container.innerHTML = filtered.map(c => `
-                <div class="list-item" onclick="showChannelProfile('${c.id}')">
+                <div class="list-item" onclick="window.showChannelProfile('${c.id}')">
                     <div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${c.avatar || '📢'}</div>
                     <div class="list-info"><div class="list-title">${c.name}</div><div class="list-sub">@${c.login || c.id}</div></div>
                 </div>
@@ -550,7 +636,7 @@
                 return;
             }
             container.innerHTML = filtered.map(g => `
-                <div class="list-item" onclick="showGroupProfile('${g.id}')">
+                <div class="list-item" onclick="window.showGroupProfile('${g.id}')">
                     <div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${g.avatar || '👥'}</div>
                     <div class="list-info"><div class="list-title">${g.name}</div><div class="list-sub">@${g.login || g.id}</div></div>
                 </div>
@@ -580,13 +666,15 @@
                     </div>
                 `;
                 container.appendChild(div);
-                div.querySelector('.accept-request').onclick = async () => {
+                div.querySelector('.accept-request').onclick = async (e) => {
+                    e.stopPropagation();
                     await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
                     await loadAllData();
                     renderLeftPanelContent();
                     showToast(`Вы приняли заявку от ${from}`);
                 };
-                div.querySelector('.decline-request').onclick = async () => {
+                div.querySelector('.decline-request').onclick = async (e) => {
+                    e.stopPropagation();
                     await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
                     await loadAllData();
                     renderLeftPanelContent();
@@ -602,7 +690,7 @@
                     <div class="list-avatar" style="${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}</div>
                     <div class="list-info"><div class="list-title">${login}</div><div class="list-sub">друг</div></div>
                 `;
-                div.onclick = () => { showUserProfile(login); };
+                div.onclick = () => { window.showUserProfile(login); };
                 container.appendChild(div);
             });
         }
@@ -652,11 +740,11 @@
         }
     }
 
-    function showMyProfile() {
+    window.showMyProfile = function() {
         const avatarUrl = userAvatars[currentUser] || null;
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
             <div class="profile-card">
                 <div class="avatar" style="width:80px; height:80px; font-size:40px; margin:0 auto; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatarUrl ? `background-image:url(${avatarUrl}); background-size:cover;` : ''}">${!avatarUrl ? '⚡' : ''}</div>
                 <h2>${currentUser}</h2>
@@ -666,16 +754,16 @@
                 <button id="closeProfileBtn" class="auth-btn">Закрыть</button>
             </div>
         `;
-        document.body.appendChild(modal);
-        document.getElementById('editProfileBtn').onclick = () => { modal.remove(); showEditProfileModal(); };
-        document.getElementById('closeProfileBtn').onclick = () => modal.remove();
-    }
+        document.body.appendChild(modalDiv);
+        document.getElementById('editProfileBtn').onclick = () => { modalDiv.remove(); showEditProfileModal(); };
+        document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
+    };
 
     function showEditProfileModal() {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
         const avatarUrl = userAvatars[currentUser] || null;
-        modal.innerHTML = `
+        modalDiv.innerHTML = `
             <div class="modal-box">
                 <h3>✏️ Редактировать профиль</h3>
                 <div style="display:flex; justify-content:center; margin:10px;"><div id="avatarPreview" class="avatar" style="width:80px; height:80px; font-size:40px; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatarUrl ? `background-image:url(${avatarUrl}); background-size:cover;` : ''}">${!avatarUrl ? '⚡' : ''}</div></div>
@@ -685,7 +773,7 @@
                 <div class="modal-buttons"><button id="saveProfileBtn" class="auth-btn">💾 Сохранить</button><button id="cancelEditBtn" class="auth-btn">Отмена</button></div>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(modalDiv);
         document.getElementById('changeAvatarBtn').onclick = () => {
             const input = document.createElement('input'); input.type = 'file'; input.accept = 'image/*';
             input.onchange = (e) => {
@@ -709,12 +797,12 @@
             currentUserData = { ...currentUserData, birthdate: document.getElementById('editBirthdate').value, about: document.getElementById('editAbout').value };
             await fetch('/update-profile', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login: currentUser, ...currentUserData }) });
             showToast('Профиль обновлён');
-            modal.remove();
+            modalDiv.remove();
         };
-        document.getElementById('cancelEditBtn').onclick = () => modal.remove();
+        document.getElementById('cancelEditBtn').onclick = () => modalDiv.remove();
     }
 
-    function showUserProfile(login) {
+    window.showUserProfile = function(login) {
         fetch('/search-user', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login }) })
             .then(r => r.json())
             .then(data => {
@@ -722,9 +810,9 @@
                 const avatar = userAvatars[login] || null;
                 const isFriend = friends?.includes(login);
                 const requestSent = friendRequests?.includes(login);
-                const modal = document.createElement('div');
-                modal.className = 'modal';
-                modal.innerHTML = `
+                const modalDiv = document.createElement('div');
+                modalDiv.className = 'modal';
+                modalDiv.innerHTML = `
                     <div class="profile-card">
                         <div class="avatar" style="width:80px; height:80px; font-size:40px; margin:0 auto; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div>
                         <h2>${data.login}</h2>
@@ -732,17 +820,16 @@
                         <div><strong>📝 О себе:</strong> ${data.about || 'не указано'}</div>
                         <button id="friendBtn" class="auth-btn">${isFriend ? '❌ Удалить из друзей' : (requestSent ? '⏳ Заявка отправлена' : '➕ Добавить в друзья')}</button>
                         <button id="msgBtn" class="auth-btn">💬 Написать сообщение</button>
-                        <button id="closeBtn" class="auth-btn">Закрыть</button>
+                        <button id="closeProfileBtn" class="auth-btn">Закрыть</button>
                     </div>
                 `;
-                document.body.appendChild(modal);
+                document.body.appendChild(modalDiv);
                 document.getElementById('friendBtn').onclick = async () => {
                     if (!isFriend && !requestSent) {
                         await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
                         showToast(`Заявка в друзья отправлена пользователю ${login}`);
-                        modal.remove();
+                        modalDiv.remove();
                         await loadAllData();
-                        renderLeftPanelContent();
                     } else if (isFriend) {
                         showToast('Удаление друга пока не реализовано');
                     } else {
@@ -764,55 +851,55 @@
                         loadMessages();
                         socket.emit('join', currentChat);
                     }
-                    modal.remove();
+                    modalDiv.remove();
                 };
-                document.getElementById('closeBtn').onclick = () => modal.remove();
+                document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
             });
-    }
+    };
 
-    function showChannelProfile(channelId) {
+    window.showChannelProfile = function(channelId) {
         const channel = channels.find(c => c.id == channelId);
         if (!channel) return;
         const isSubscribed = channel.members?.includes(currentUser);
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
             <div class="profile-card">
                 <div style="font-size:64px;">${channel.avatar || '📢'}</div>
                 <h2>${channel.name}</h2>
                 <p>@${channel.login || channel.id}</p>
                 <div><strong>🎮 Тематика:</strong> ${channel.theme || 'не указана'}</div>
                 <div><strong>👥 Подписчиков:</strong> ${channel.members?.length || 0}</div>
-                ${!isSubscribed ? '<button id="subscribeBtn" class="auth-btn">➕ Подписаться</button>' : '<button id="closeBtn" class="auth-btn">Закрыть</button>'}
+                ${!isSubscribed ? '<button id="subscribeBtn" class="auth-btn">➕ Подписаться</button>' : ''}
+                <button id="closeProfileBtn" class="auth-btn">Закрыть</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(modalDiv);
         if (!isSubscribed) {
             document.getElementById('subscribeBtn').onclick = async () => {
                 await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: channel.id, memberLogin: currentUser }) });
                 await loadAllData();
                 showToast(`Вы подписались на канал ${channel.name}`);
-                modal.remove();
+                modalDiv.remove();
             };
-        } else {
-            document.getElementById('closeBtn').onclick = () => modal.remove();
         }
-    }
+        document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
+    };
 
-    function showGroupProfile(groupId) {
+    window.showGroupProfile = function(groupId) {
         const group = groups.find(g => g.id == groupId);
         if (!group) return;
         const isMember = group.members?.includes(currentUser);
         const isOwner = group.creator === currentUser;
-        const modal = document.createElement('div');
-        modal.className = 'modal';
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
         const membersList = (group.members || []).filter(m => m !== currentUser).map(m => `
-            <div class="member-item" onclick="showUserProfile('${m}')">
+            <div class="member-item" onclick="window.showUserProfile('${m}'); modalDiv.remove();">
                 <div class="list-avatar" style="${userAvatars[m] ? `background-image:url(${userAvatars[m]}); background-size:cover;` : ''}">${!userAvatars[m] ? '👤' : ''}</div>
                 <div class="list-info"><div class="list-title">${m}</div></div>
             </div>
         `).join('');
-        modal.innerHTML = `
+        modalDiv.innerHTML = `
             <div class="profile-card" style="width:340px;">
                 <div style="font-size:64px;">${group.avatar || '👥'}</div>
                 <h2>${group.name}</h2>
@@ -821,25 +908,25 @@
                 <div><strong>👥 Участники (${(group.members?.length || 0) - 1}):</strong></div>
                 <div class="member-list">${membersList || 'Нет других участников'}</div>
                 ${!isMember && !isOwner ? '<button id="requestJoinBtn" class="auth-btn">📨 Отправить запрос на вступление</button>' : ''}
-                <button id="closeBtn" class="auth-btn">Закрыть</button>
+                <button id="closeProfileBtn" class="auth-btn">Закрыть</button>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(modalDiv);
         if (!isMember && !isOwner) {
             document.getElementById('requestJoinBtn').onclick = async () => {
                 await fetch('/request-group-join', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ groupId: group.id, fromUser: currentUser, toUser: group.creator }) });
                 showToast(`Запрос на вступление отправлен создателю группы ${group.creator}`);
-                modal.remove();
+                modalDiv.remove();
             };
         }
-        document.getElementById('closeBtn').onclick = () => modal.remove();
-    }
+        document.getElementById('closeProfileBtn').onclick = () => modalDiv.remove();
+    };
 
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
             <div class="modal-box">
                 <h3>👥 Создать группу</h3>
                 <div class="emoji-picker" id="emojiPickerGroup">
@@ -853,27 +940,27 @@
                 <div class="modal-buttons"><button id="confirmCreateGroup">Создать</button><button id="cancelCreateGroup">Отмена</button></div>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(modalDiv);
         document.querySelectorAll('#emojiPickerGroup .emoji-option').forEach(el => { el.onclick = () => { selectedEmoji = el.innerText; }; });
-        modal.querySelector('#confirmCreateGroup').onclick = async () => {
-            let loginRaw = modal.querySelector('#groupLogin').value.trim();
+        modalDiv.querySelector('#confirmCreateGroup').onclick = async () => {
+            let loginRaw = modalDiv.querySelector('#groupLogin').value.trim();
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
-            const name = modal.querySelector('#groupName').value.trim();
-            const theme = modal.querySelector('#groupTheme').value;
+            const name = modalDiv.querySelector('#groupName').value.trim();
+            const theme = modalDiv.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
             const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isGroup: true }) });
             await loadAllData();
             showToast(`Группа "${name}" создана`);
-            modal.remove();
+            modalDiv.remove();
         };
-        modal.querySelector('#cancelCreateGroup').onclick = () => modal.remove();
+        modalDiv.querySelector('#cancelCreateGroup').onclick = () => modalDiv.remove();
     }
 
     function showCreateChannelModal() {
         let selectedEmoji = '📢';
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
             <div class="modal-box">
                 <h3>📢 Создать канал</h3>
                 <div class="emoji-picker" id="emojiPickerChannel">
@@ -887,20 +974,20 @@
                 <div class="modal-buttons"><button id="confirmCreateChannel">Создать</button><button id="cancelCreateChannel">Отмена</button></div>
             </div>
         `;
-        document.body.appendChild(modal);
+        document.body.appendChild(modalDiv);
         document.querySelectorAll('#emojiPickerChannel .emoji-option').forEach(el => { el.onclick = () => { selectedEmoji = el.innerText; }; });
-        modal.querySelector('#confirmCreateChannel').onclick = async () => {
-            let loginRaw = modal.querySelector('#channelLogin').value.trim();
+        modalDiv.querySelector('#confirmCreateChannel').onclick = async () => {
+            let loginRaw = modalDiv.querySelector('#channelLogin').value.trim();
             let login = loginRaw.startsWith('@') ? loginRaw : '@' + loginRaw;
-            const name = modal.querySelector('#channelName').value.trim();
-            const theme = modal.querySelector('#channelTheme').value;
+            const name = modalDiv.querySelector('#channelName').value.trim();
+            const theme = modalDiv.querySelector('#channelTheme').value;
             if (!name) { showToast('Введите название'); return; }
             await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isChannel: true }) });
             await loadAllData();
             showToast(`Канал "${name}" создан`);
-            modal.remove();
+            modalDiv.remove();
         };
-        modal.querySelector('#cancelCreateChannel').onclick = () => modal.remove();
+        modalDiv.querySelector('#cancelCreateChannel').onclick = () => modalDiv.remove();
     }
 
     function getAvatarForUser(login) {
@@ -921,7 +1008,7 @@
             const avatarHtml = getAvatarForUser(msg.from);
             return `
                 <div class="message ${msg.from === currentUser ? 'my-message' : ''}" data-idx="${idx}">
-                    <div class="message-avatar" onclick="showUserProfile('${msg.from}')">${avatarHtml}</div>
+                    <div class="message-avatar" onclick="window.showUserProfile('${msg.from}')">${avatarHtml}</div>
                     <div class="message-content">
                         <strong>${msg.from}:</strong> ${msg.text}<br>
                         <small>${msg.time}</small>
@@ -1060,19 +1147,19 @@
 
     function showEmojiPicker() {
         const emojis = ['😀','😂','😍','😎','🔥','⭐','🎮','⚡','💀','❤️','👍','🙈','✨','🎉','💔','✅','❌'];
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `<div class="modal-box"><h3>Эмодзи</h3><div class="emoji-picker" id="emojiGrid"></div><button id="closeEmoji" class="auth-btn">Закрыть</button></div>`;
-        document.body.appendChild(modal);
-        const grid = modal.querySelector('#emojiGrid');
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `<div class="modal-box"><h3>Эмодзи</h3><div class="emoji-picker" id="emojiGrid"></div><button id="closeEmoji" class="auth-btn">Закрыть</button></div>`;
+        document.body.appendChild(modalDiv);
+        const grid = modalDiv.querySelector('#emojiGrid');
         emojis.forEach(emoji => {
             const span = document.createElement('span');
             span.className = 'emoji-option';
             span.innerText = emoji;
-            span.onclick = () => { document.getElementById('msgInput').value += emoji; modal.remove(); };
+            span.onclick = () => { document.getElementById('msgInput').value += emoji; modalDiv.remove(); };
             grid.appendChild(span);
         });
-        modal.querySelector('#closeEmoji').onclick = () => modal.remove();
+        modalDiv.querySelector('#closeEmoji').onclick = () => modalDiv.remove();
     }
 
     function sendFile(file) {
@@ -1088,12 +1175,12 @@
     }
 
     window.viewMedia = (src, type) => {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        if (type === 'image') modal.innerHTML = `<img src="${src}" style="max-width:90%; max-height:80%; border-radius:16px;">`;
-        else modal.innerHTML = `<video src="${src}" controls style="max-width:90%; max-height:80%;"></video>`;
-        modal.onclick = () => modal.remove();
-        document.body.appendChild(modal);
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        if (type === 'image') modalDiv.innerHTML = `<img src="${src}" style="max-width:90%; max-height:80%; border-radius:16px;">`;
+        else modalDiv.innerHTML = `<video src="${src}" controls style="max-width:90%; max-height:80%;"></video>`;
+        modalDiv.onclick = () => modalDiv.remove();
+        document.body.appendChild(modalDiv);
     };
 
     window.downloadFile = (url, name) => {
@@ -1148,23 +1235,24 @@
     }
 
     function showFriendsList() {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `<div class="friends-list"><h3>👥 Друзья</h3><div id="friendsContainer"></div><button id="closeFriends" class="auth-btn">Закрыть</button></div>`;
-        document.body.appendChild(modal);
-        const container = modal.querySelector('#friendsContainer');
-        if (!friends || friends.length === 0) container.innerHTML = '<p>Нет друзей</p>';
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `<div class="modal-box" style="width:350px;"><h3>👥 Друзья</h3><div id="friendsContainer" style="max-height:400px; overflow-y:auto;"></div><button id="closeFriends" class="auth-btn" style="margin-top:16px;">Закрыть</button></div>`;
+        document.body.appendChild(modalDiv);
+        const container = modalDiv.querySelector('#friendsContainer');
+        if (!friends || friends.length === 0) container.innerHTML = '<p style="text-align:center;">Нет друзей</p>';
         else {
             friends.forEach(login => {
                 const avatar = userAvatars[login] || null;
                 const div = document.createElement('div');
                 div.className = 'friend-item';
-                div.innerHTML = `<div class="friend-avatar" style="${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div><div><strong>${login}</strong></div>`;
-                div.onclick = () => { modal.remove(); showUserProfile(login); };
+                div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; cursor:pointer; border-radius:20px; margin:5px 0; background:rgba(0,255,255,0.05);';
+                div.innerHTML = `<div class="friend-avatar" style="width:40px; height:40px; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div><div><strong>${login}</strong></div>`;
+                div.onclick = () => { modalDiv.remove(); window.showUserProfile(login); };
                 container.appendChild(div);
             });
         }
-        modal.querySelector('#closeFriends').onclick = () => modal.remove();
+        modalDiv.querySelector('#closeFriends').onclick = () => modalDiv.remove();
     }
 
     function deleteChat(chatId, chatName) {
@@ -1186,27 +1274,27 @@
     }
 
     function showAddSubgroupModal(groupId, groupName) {
-        const modal = document.createElement('div');
-        modal.className = 'modal';
-        modal.innerHTML = `
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
             <div class="modal-box">
                 <h3>➕ Добавить подгруппу в "${groupName}"</h3>
                 <input type="text" id="subgroupName" placeholder="Название подгруппы">
                 <div class="modal-buttons"><button id="confirmCreate">Создать</button><button id="cancelCreate">Отмена</button></div>
             </div>
         `;
-        document.body.appendChild(modal);
-        modal.querySelector('#confirmCreate').onclick = () => {
-            const name = modal.querySelector('#subgroupName').value.trim();
+        document.body.appendChild(modalDiv);
+        modalDiv.querySelector('#confirmCreate').onclick = () => {
+            const name = modalDiv.querySelector('#subgroupName').value.trim();
             if (!name) return showToast('Введите название');
             if (!subgroups[groupId]) subgroups[groupId] = [];
             subgroups[groupId].push({ id: Date.now(), name: name });
             saveSubgroups();
             renderLeftPanelContent();
-            modal.remove();
+            modalDiv.remove();
             showToast(`Подгруппа "${name}" создана`);
         };
-        modal.querySelector('#cancelCreate').onclick = () => modal.remove();
+        modalDiv.querySelector('#cancelCreate').onclick = () => modalDiv.remove();
     }
 
     function showChatMenu() {
@@ -1328,6 +1416,8 @@
             <button class="friends-icon" id="friendsIcon">👥</button>
         `;
 
+        updateFriendRequestBadge();
+
         const currentChatObj = allChats.find(c => c.id === currentChat);
         if (currentChatObj && currentChatObj.isChannel && currentChatObj.creator !== currentUser) {
             const chatInput = document.getElementById('chatInputArea');
@@ -1364,12 +1454,12 @@
             const chat = allChats.find(c => c.id === currentChat);
             if (!chat || currentChat === 'favorites') return showToast('Избранное — личные заметки');
             if (chat.isChannel) {
-                showChannelProfile(chat.id);
+                window.showChannelProfile(chat.id);
             } else if (chat.isGroup) {
-                showGroupProfile(chat.id);
+                window.showGroupProfile(chat.id);
             } else {
                 const otherUser = chat.members?.find(m => m !== currentUser);
-                if (otherUser) showUserProfile(otherUser);
+                if (otherUser) window.showUserProfile(otherUser);
                 else showToast('Профиль чата');
             }
         };
