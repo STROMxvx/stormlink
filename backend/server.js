@@ -16,13 +16,14 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// Файлы данных
+// Файлы для хранения данных
 const USERS_FILE = path.join(__dirname, 'users.json');
 const CHATS_FILE = path.join(__dirname, 'chats.json');
 const MESSAGES_FILE = path.join(__dirname, 'messages.json');
 const FRIENDS_FILE = path.join(__dirname, 'friends.json');
 const REQUESTS_FILE = path.join(__dirname, 'friendRequests.json');
 const GROUP_REQUESTS_FILE = path.join(__dirname, 'groupRequests.json');
+const UNREAD_FILE = path.join(__dirname, 'unread.json');
 
 let users = {};
 let globalChats = [];
@@ -30,6 +31,7 @@ let messages = {};
 let friends = {};
 let friendRequests = {};
 let groupRequests = {};
+let unreadCounts = {};
 
 if (fs.existsSync(USERS_FILE)) users = JSON.parse(fs.readFileSync(USERS_FILE));
 if (fs.existsSync(CHATS_FILE)) globalChats = JSON.parse(fs.readFileSync(CHATS_FILE));
@@ -37,6 +39,7 @@ if (fs.existsSync(MESSAGES_FILE)) messages = JSON.parse(fs.readFileSync(MESSAGES
 if (fs.existsSync(FRIENDS_FILE)) friends = JSON.parse(fs.readFileSync(FRIENDS_FILE));
 if (fs.existsSync(REQUESTS_FILE)) friendRequests = JSON.parse(fs.readFileSync(REQUESTS_FILE));
 if (fs.existsSync(GROUP_REQUESTS_FILE)) groupRequests = JSON.parse(fs.readFileSync(GROUP_REQUESTS_FILE));
+if (fs.existsSync(UNREAD_FILE)) unreadCounts = JSON.parse(fs.readFileSync(UNREAD_FILE));
 
 function saveUsers() { fs.writeFileSync(USERS_FILE, JSON.stringify(users, null, 2)); }
 function saveChats() { fs.writeFileSync(CHATS_FILE, JSON.stringify(globalChats, null, 2)); }
@@ -44,6 +47,7 @@ function saveMessages() { fs.writeFileSync(MESSAGES_FILE, JSON.stringify(message
 function saveFriends() { fs.writeFileSync(FRIENDS_FILE, JSON.stringify(friends, null, 2)); }
 function saveRequests() { fs.writeFileSync(REQUESTS_FILE, JSON.stringify(friendRequests, null, 2)); }
 function saveGroupRequests() { fs.writeFileSync(GROUP_REQUESTS_FILE, JSON.stringify(groupRequests, null, 2)); }
+function saveUnread() { fs.writeFileSync(UNREAD_FILE, JSON.stringify(unreadCounts, null, 2)); }
 
 // Регистрация
 app.post('/register', async (req, res) => {
@@ -55,10 +59,11 @@ app.post('/register', async (req, res) => {
         surname: surname || '',
         birthdate: birthdate || '',
         about: about || '',
-        avatar: null
+        avatar: null,
+        token: require('crypto').randomBytes(64).toString('hex')
     };
     saveUsers();
-    res.json({ success: true });
+    res.json({ success: true, token: users[login].token });
 });
 
 // Логин
@@ -67,7 +72,17 @@ app.post('/login', async (req, res) => {
     const user = users[login];
     if (!user) return res.json({ error: 'Пользователь не найден' });
     if (!await bcrypt.compare(password, user.password)) return res.json({ error: 'Неверный пароль' });
-    res.json({ success: true, login, user: { name: user.name, login, surname: user.surname, birthdate: user.birthdate, about: user.about } });
+    res.json({ success: true, login, user: { name: user.name, login, surname: user.surname, birthdate: user.birthdate, about: user.about, token: user.token } });
+});
+
+// Автовход по токену
+app.post('/auto-login', (req, res) => {
+    const { token } = req.body;
+    const login = Object.keys(users).find(l => users[l].token === token);
+    if (login) {
+        const user = users[login];
+        res.json({ success: true, login, user: { name: user.name, login, surname: user.surname, birthdate: user.birthdate, about: user.about } });
+    } else res.json({ error: 'Неверный токен' });
 });
 
 // Обновление профиля
@@ -100,8 +115,11 @@ app.post('/create-chat', (req, res) => {
     };
     globalChats.push(newChat);
     messages[chatId] = [];
+    if (!unreadCounts[creator]) unreadCounts[creator] = {};
+    unreadCounts[creator][chatId] = 0;
     saveChats();
     saveMessages();
+    saveUnread();
     res.json({ chatId });
 });
 
@@ -111,7 +129,10 @@ app.post('/add-member', (req, res) => {
     const chat = globalChats.find(c => c.id === chatId);
     if (chat && !chat.members.includes(memberLogin)) {
         chat.members.push(memberLogin);
+        if (!unreadCounts[memberLogin]) unreadCounts[memberLogin] = {};
+        unreadCounts[memberLogin][chatId] = 0;
         saveChats();
+        saveUnread();
         res.json({ success: true });
     } else res.json({ error: 'Чат не найден или участник уже добавлен' });
 });
@@ -133,7 +154,10 @@ app.post('/respond-group-request', (req, res) => {
         const chat = globalChats.find(c => c.id === groupId);
         if (chat && !chat.members.includes(fromUser)) {
             chat.members.push(fromUser);
+            if (!unreadCounts[fromUser]) unreadCounts[fromUser] = {};
+            unreadCounts[fromUser][groupId] = 0;
             saveChats();
+            saveUnread();
         }
     }
     if (groupRequests[toUser]) {
@@ -211,14 +235,21 @@ app.post('/delete-chat', (req, res) => {
     const chatIndex = globalChats.findIndex(c => c.id === chatId);
     if (chatIndex !== -1) {
         const chat = globalChats[chatIndex];
-        if (chat.creator === userId) {
+        if (chat.creator === userId || !chat.isGroup) {
             globalChats.splice(chatIndex, 1);
             delete messages[chatId];
+            for (let u in unreadCounts) delete unreadCounts[u][chatId];
             saveChats();
             saveMessages();
+            saveUnread();
             res.json({ success: true });
         } else res.json({ error: 'Только создатель может удалить чат' });
     } else res.json({ error: 'Чат не найден' });
+});
+
+// Получить непрочитанные
+app.get('/unread/:login', (req, res) => {
+    res.json({ unread: unreadCounts[req.params.login] || {} });
 });
 
 // Socket.io
@@ -230,13 +261,33 @@ io.on('connection', (socket) => {
         if (!messages[chatId]) messages[chatId] = [];
         messages[chatId].push(msg);
         saveMessages();
+
+        const chat = globalChats.find(c => c.id === chatId);
+        if (chat) {
+            const recipients = chat.members || [];
+            recipients.forEach(recipient => {
+                if (recipient !== from) {
+                    if (!unreadCounts[recipient]) unreadCounts[recipient] = {};
+                    unreadCounts[recipient][chatId] = (unreadCounts[recipient][chatId] || 0) + 1;
+                }
+            });
+            saveUnread();
+        }
         io.to(chatId).emit('newMessage', msg);
+        io.emit('updateUnread', { chatId });
     });
     socket.on('deleteMessage', ({ chatId, messageIndex }) => {
         if (messages[chatId] && messages[chatId][messageIndex]) {
             messages[chatId].splice(messageIndex, 1);
             saveMessages();
             io.to(chatId).emit('messageDeleted', { chatId, messageIndex });
+        }
+    });
+    socket.on('markRead', ({ chatId, user }) => {
+        if (unreadCounts[user] && unreadCounts[user][chatId]) {
+            unreadCounts[user][chatId] = 0;
+            saveUnread();
+            io.emit('updateUnread', { chatId });
         }
     });
     socket.on('disconnect', () => console.log('❌ Пользователь отключился'));
