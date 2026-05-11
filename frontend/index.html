@@ -77,7 +77,7 @@
         .list-item:hover { background: rgba(0,255,255,0.15); border: 1px solid #0af; }
         .list-avatar { width: 44px; height: 44px; background: #0af; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 22px; background-size: cover; background-position: center; }
         .list-info { flex: 1; }
-        .list-title { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; }
+        .list-title { font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .list-sub { font-size: 11px; opacity: 0.6; }
         .unread-badge {
             background: #ff3333;
@@ -635,7 +635,7 @@
                 const unreadHtml = getUnreadCount(chat.id);
                 const div = document.createElement('div');
                 div.className = 'list-item';
-                div.innerHTML = typeof avatar === 'string' && avatar.startsWith('<') ? avatar : `<div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${avatar}</div>`;
+                div.innerHTML = (typeof avatar === 'string' && avatar.startsWith('<')) ? avatar : `<div class="list-avatar" style="display:flex; align-items:center; justify-content:center;">${avatar}</div>`;
                 div.innerHTML += `<div class="list-info"><div class="list-title">${displayName} ${unreadHtml}</div><div class="list-sub">${chat.isGroup ? 'Группа' : (chat.isChannel ? 'Канал' : 'Личный чат')}</div></div>`;
                 div.onclick = () => {
                     currentChat = chat.id;
@@ -806,7 +806,7 @@
         const isOwner = group.creator === currentUser;
         const modal = document.createElement('div');
         modal.className = 'modal';
-        const membersList = (group.members || []).map(m => `
+        const membersList = (group.members || []).filter(m => m !== currentUser).map(m => `
             <div class="member-item" onclick="showUserProfile('${m}')">
                 <div class="list-avatar" style="${userAvatars[m] ? `background-image:url(${userAvatars[m]}); background-size:cover;` : ''}">${!userAvatars[m] ? '👤' : ''}</div>
                 <div class="list-info"><div class="list-title">${m}</div></div>
@@ -818,8 +818,8 @@
                 <h2>${group.name}</h2>
                 <p>@${group.login || group.id}</p>
                 <div><strong>🎮 Тематика:</strong> ${group.theme || 'не указана'}</div>
-                <div><strong>👥 Участники (${group.members?.length || 0}):</strong></div>
-                <div class="member-list">${membersList || 'Нет участников'}</div>
+                <div><strong>👥 Участники (${(group.members?.length || 0) - 1}):</strong></div>
+                <div class="member-list">${membersList || 'Нет других участников'}</div>
                 ${!isMember && !isOwner ? '<button id="requestJoinBtn" class="auth-btn">📨 Отправить запрос на вступление</button>' : ''}
                 <button id="closeBtn" class="auth-btn">Закрыть</button>
             </div>
@@ -1281,6 +1281,7 @@
             }
         });
         socket.on('updateUnread', () => { loadAllData(); });
+        socket.on('error', (msg) => { showToast(msg); });
 
         document.getElementById('app').innerHTML = `
             <button class="burger-btn" id="burgerBtn">☰</button>
@@ -1311,7 +1312,7 @@
                         <span></span>
                         <button id="cancelReplyBtn" style="display:none;">✖ Отмена</button>
                     </div>
-                    <div class="chat-input">
+                    <div class="chat-input" id="chatInputArea">
                         <button id="emojiBtn">😀</button>
                         <button id="attachBtn">📎</button>
                         <input type="text" id="msgInput" placeholder="Введите сообщение...">
@@ -1326,6 +1327,21 @@
             </div>
             <button class="friends-icon" id="friendsIcon">👥</button>
         `;
+
+        const currentChatObj = allChats.find(c => c.id === currentChat);
+        if (currentChatObj && currentChatObj.isChannel && currentChatObj.creator !== currentUser) {
+            const chatInput = document.getElementById('chatInputArea');
+            if (chatInput) {
+                chatInput.innerHTML = `<button id="notifyToggleBtn" style="flex:1; background:#0af; border:none; border-radius:40px; padding:10px;">${mutedChats[currentChat] ? '🔔 Вкл уведомления' : '🔕 Выкл уведомления'}</button>`;
+                document.getElementById('notifyToggleBtn').onclick = () => {
+                    mutedChats[currentChat] = !mutedChats[currentChat];
+                    saveMuted();
+                    renderLeftPanelContent();
+                    document.getElementById('notifyToggleBtn').innerText = mutedChats[currentChat] ? '🔔 Вкл уведомления' : '🔕 Выкл уведомления';
+                    showToast(mutedChats[currentChat] ? 'Уведомления выключены' : 'Уведомления включены');
+                };
+            }
+        }
 
         document.getElementById('tabProfile').onclick = () => { activeLeftTab = 'profile'; renderLeftPanelContent(); };
         document.getElementById('tabUsers').onclick = () => { activeLeftTab = 'users'; renderLeftPanelContent(); };
@@ -1343,7 +1359,7 @@
         document.getElementById('sendBtn').onclick = sendMessage;
         document.getElementById('cancelReplyBtn').onclick = () => { replyTo = null; document.getElementById('replyIndicator').innerHTML = '<span></span><button id="cancelReplyBtn" style="display:none;">✖ Отмена</button>'; };
         document.getElementById('msgInput').addEventListener('keypress', (e) => e.key === 'Enter' && sendMessage());
-        document.getElementById('chatMenuBtn').onclick = showChatMenu;
+        document.getElementById('chatMenuBtn').onclick = (e) => { e.stopPropagation(); showChatMenu(); };
         document.getElementById('chatHeader').onclick = async () => {
             const chat = allChats.find(c => c.id === currentChat);
             if (!chat || currentChat === 'favorites') return showToast('Избранное — личные заметки');
