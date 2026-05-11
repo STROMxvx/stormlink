@@ -394,46 +394,56 @@
     }
 
     function showLogin() {
-        document.getElementById('authForm').innerHTML = `
+        const authForm = document.getElementById('authForm');
+        if (!authForm) return;
+        authForm.innerHTML = `
             <input type="text" id="login" placeholder="Логин">
             <input type="password" id="password" placeholder="Пароль">
             <button id="doLogin" class="auth-btn">Войти</button>
         `;
-        document.getElementById('doLogin').onclick = async () => {
-            const login = document.getElementById('login').value;
-            const password = document.getElementById('password').value;
-            const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
-            const data = await res.json();
-            if (data.error) showToast(data.error);
-            else { 
-                currentUser = data.login; 
-                currentUserData = data.user; 
-                localStorage.setItem('authToken', data.user.token);
-                startMessenger(); 
-            }
-        };
+        const doLoginBtn = document.getElementById('doLogin');
+        if (doLoginBtn) {
+            doLoginBtn.onclick = async () => {
+                const login = document.getElementById('login').value;
+                const password = document.getElementById('password').value;
+                const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
+                const data = await res.json();
+                if (data.error) showToast(data.error);
+                else { 
+                    currentUser = data.login; 
+                    currentUserData = data.user; 
+                    localStorage.setItem('authToken', data.user.token);
+                    startMessenger(); 
+                }
+            };
+        }
     }
 
     function showRegister() {
-        document.getElementById('authForm').innerHTML = `
+        const authForm = document.getElementById('authForm');
+        if (!authForm) return;
+        authForm.innerHTML = `
             <input type="text" id="regLogin" placeholder="Логин">
             <input type="password" id="regPassword" placeholder="Пароль">
             <input type="date" id="regBirthdate">
             <textarea id="regAbout" rows="2" placeholder="О себе"></textarea>
             <button id="doReg" class="auth-btn">Зарегистрироваться</button>
         `;
-        document.getElementById('doReg').onclick = async () => {
-            const login = document.getElementById('regLogin').value;
-            const password = document.getElementById('regPassword').value;
-            const res = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password, name: login, surname: '', birthdate: document.getElementById('regBirthdate').value, about: document.getElementById('regAbout').value, favoriteGames: [] }) });
-            const data = await res.json();
-            if (data.error) showToast(data.error);
-            else { 
-                showToast('Регистрация успешна! Войдите'); 
-                localStorage.setItem('authToken', data.token);
-                showLogin(); 
-            }
-        };
+        const doRegBtn = document.getElementById('doReg');
+        if (doRegBtn) {
+            doRegBtn.onclick = async () => {
+                const login = document.getElementById('regLogin').value;
+                const password = document.getElementById('regPassword').value;
+                const res = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password, name: login, surname: '', birthdate: document.getElementById('regBirthdate').value, about: document.getElementById('regAbout').value, favoriteGames: [] }) });
+                const data = await res.json();
+                if (data.error) showToast(data.error);
+                else { 
+                    showToast('Регистрация успешна! Войдите'); 
+                    localStorage.setItem('authToken', data.token);
+                    showLogin(); 
+                }
+            };
+        }
     }
 
     async function loadAllData() {
@@ -904,7 +914,7 @@
             const name = modalDiv.querySelector('#groupName').value.trim();
             const theme = modalDiv.querySelector('#groupTheme').value;
             if (!name) { showToast('Введите название'); return; }
-            const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isGroup: true }) });
+            await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name, login, theme, avatar: selectedEmoji, creator: currentUser, members: [currentUser], isGroup: true }) });
             await loadAllData();
             showToast(`Группа "${name}" создана`);
             modalDiv.remove();
@@ -1194,7 +1204,7 @@
     function showFriendsList() {
         const modalDiv = document.createElement('div');
         modalDiv.className = 'modal';
-        modalDiv.innerHTML = `<div class="modal-box" style="width:350px;"><h3>👥 Друзья</h3><div id="friendsContainer" style="max-height:400px; overflow-y:auto;"></div><div id="friendRequestsContainer" style="margin-top:16px;"><h4>📨 Заявки в друзья</h4><div id="friendRequestsList"></div></div><button id="closeFriends" class="auth-btn" style="margin-top:16px;">Закрыть</button></div>`;
+        modalDiv.innerHTML = `<div class="modal-box" style="width:350px;"><h3>👥 Друзья</h3><div id="friendsContainer" style="max-height:200px; overflow-y:auto;"></div><div style="margin-top:16px;"><h4>📨 Заявки в друзья</h4><div id="friendRequestsContainer" style="max-height:200px; overflow-y:auto;"></div></div><button id="closeFriends" class="auth-btn" style="margin-top:16px;">Закрыть</button></div>`;
         document.body.appendChild(modalDiv);
         
         const friendsContainer = modalDiv.querySelector('#friendsContainer');
@@ -1204,7 +1214,6 @@
             friends.forEach(login => {
                 const avatar = userAvatars[login] || null;
                 const div = document.createElement('div');
-                div.className = 'friend-item';
                 div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; cursor:pointer; border-radius:20px; margin:5px 0; background:rgba(0,255,255,0.05);';
                 div.innerHTML = `<div class="friend-avatar" style="width:40px; height:40px; background:#0af; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '⚡' : ''}</div><div><strong>${login}</strong></div>`;
                 div.onclick = () => { modalDiv.remove(); window.showUserProfile(login); };
@@ -1212,15 +1221,14 @@
             });
         }
         
-        const requestsContainer = modalDiv.querySelector('#friendRequestsList');
+        const requestsContainer = modalDiv.querySelector('#friendRequestsContainer');
         if (!friendRequests || friendRequests.length === 0) {
             requestsContainer.innerHTML = '<p style="text-align:center;">Нет заявок</p>';
         } else {
             friendRequests.forEach(from => {
                 const avatar = userAvatars[from] || null;
                 const div = document.createElement('div');
-                div.className = 'friend-request-item
-                                    div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; border-radius:20px; margin:5px 0; background:rgba(255,100,0,0.2);';
+                div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; border-radius:20px; margin:5px 0; background:rgba(255,100,0,0.2);';
                 div.innerHTML = `
                     <div class="friend-avatar" style="width:40px; height:40px; background:#ff6600; border-radius:50%; display:flex; align-items:center; justify-content:center; ${avatar ? `background-image:url(${avatar}); background-size:cover;` : ''}">${!avatar ? '❓' : ''}</div>
                     <div style="flex:1;"><strong>${from}</strong><br><small>хочет добавить в друзья</small></div>
@@ -1262,8 +1270,7 @@
         showConfirmDialog(`Выйти из канала "${chatName}"?`, async () => {
             const chat = allChats.find(c => c.id === chatId);
             if (chat && chat.members) {
-                const newMembers = chat.members.filter(m => m !== currentUser);
-                chat.members = newMembers;
+                chat.members = chat.members.filter(m => m !== currentUser);
                 await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, memberLogin: currentUser }) });
                 await loadAllData();
                 if (currentChat === chatId) {
