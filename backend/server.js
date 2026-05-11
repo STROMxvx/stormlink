@@ -16,7 +16,6 @@ app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, '../frontend/index.html'));
 });
 
-// Файлы для хранения данных
 const USERS_FILE = path.join(__dirname, 'users.json');
 const CHATS_FILE = path.join(__dirname, 'chats.json');
 const MESSAGES_FILE = path.join(__dirname, 'messages.json');
@@ -49,7 +48,6 @@ function saveRequests() { fs.writeFileSync(REQUESTS_FILE, JSON.stringify(friendR
 function saveGroupRequests() { fs.writeFileSync(GROUP_REQUESTS_FILE, JSON.stringify(groupRequests, null, 2)); }
 function saveUnread() { fs.writeFileSync(UNREAD_FILE, JSON.stringify(unreadCounts, null, 2)); }
 
-// Регистрация
 app.post('/register', async (req, res) => {
     const { login, password, name, surname, birthdate, about } = req.body;
     if (users[login]) return res.json({ error: 'Логин занят' });
@@ -66,7 +64,6 @@ app.post('/register', async (req, res) => {
     res.json({ success: true, token: users[login].token });
 });
 
-// Логин
 app.post('/login', async (req, res) => {
     const { login, password } = req.body;
     const user = users[login];
@@ -75,7 +72,6 @@ app.post('/login', async (req, res) => {
     res.json({ success: true, login, user: { name: user.name, login, surname: user.surname, birthdate: user.birthdate, about: user.about, token: user.token } });
 });
 
-// Автовход по токену
 app.post('/auto-login', (req, res) => {
     const { token } = req.body;
     const login = Object.keys(users).find(l => users[l].token === token);
@@ -85,7 +81,6 @@ app.post('/auto-login', (req, res) => {
     } else res.json({ error: 'Неверный токен' });
 });
 
-// Обновление профиля
 app.post('/update-profile', (req, res) => {
     const { login, name, surname, birthdate, about } = req.body;
     if (users[login]) {
@@ -98,7 +93,6 @@ app.post('/update-profile', (req, res) => {
     } else res.json({ error: 'Пользователь не найден' });
 });
 
-// Создание чата (личный, группа, канал)
 app.post('/create-chat', (req, res) => {
     const { name, avatar, theme, creator, members, isGroup, isChannel, login } = req.body;
     const chatId = `chat_${Date.now()}`;
@@ -109,10 +103,11 @@ app.post('/create-chat', (req, res) => {
         theme: theme || '',
         login: login || '',
         creator: creator,
-        members: members || (isChannel ? [] : [creator]),
+        members: members || [],
         isGroup: isGroup || false,
         isChannel: isChannel || false
     };
+    if (isChannel && !newChat.members.includes(creator)) newChat.members.push(creator);
     globalChats.push(newChat);
     messages[chatId] = [];
     if (!unreadCounts[creator]) unreadCounts[creator] = {};
@@ -123,7 +118,6 @@ app.post('/create-chat', (req, res) => {
     res.json({ chatId });
 });
 
-// Добавить участника в чат (группу/канал)
 app.post('/add-member', (req, res) => {
     const { chatId, memberLogin } = req.body;
     const chat = globalChats.find(c => c.id === chatId);
@@ -137,7 +131,6 @@ app.post('/add-member', (req, res) => {
     } else res.json({ error: 'Чат не найден или участник уже добавлен' });
 });
 
-// Запрос на вступление в группу
 app.post('/request-group-join', (req, res) => {
     const { groupId, fromUser, toUser } = req.body;
     if (!groupRequests[toUser]) groupRequests[toUser] = [];
@@ -147,7 +140,6 @@ app.post('/request-group-join', (req, res) => {
     res.json({ success: true });
 });
 
-// Принять/отклонить запрос в группу
 app.post('/respond-group-request', (req, res) => {
     const { groupId, fromUser, toUser, accept } = req.body;
     if (accept) {
@@ -167,16 +159,12 @@ app.post('/respond-group-request', (req, res) => {
     res.json({ success: true });
 });
 
-// Получить все чаты
 app.get('/chats', (req, res) => res.json(globalChats));
-
-// Получить всех пользователей
 app.get('/users', (req, res) => {
     const list = Object.keys(users).map(login => ({ login, name: users[login].name }));
     res.json(list);
 });
 
-// Поиск пользователя
 app.post('/search-user', (req, res) => {
     const { login } = req.body;
     const user = users[login];
@@ -185,10 +173,8 @@ app.post('/search-user', (req, res) => {
     } else res.json({ found: false });
 });
 
-// Получить сообщения чата
 app.get('/messages/:chatId', (req, res) => res.json(messages[req.params.chatId] || []));
 
-// Друзья
 app.post('/add-friend', (req, res) => {
     const { from, to } = req.body;
     if (!friendRequests[to]) friendRequests[to] = [];
@@ -229,7 +215,6 @@ app.get('/group-requests/:login', (req, res) => {
     res.json({ requests: groupRequests[req.params.login] || [] });
 });
 
-// Удаление чата
 app.post('/delete-chat', (req, res) => {
     const { chatId, userId } = req.body;
     const chatIndex = globalChats.findIndex(c => c.id === chatId);
@@ -247,22 +232,23 @@ app.post('/delete-chat', (req, res) => {
     } else res.json({ error: 'Чат не найден' });
 });
 
-// Получить непрочитанные
 app.get('/unread/:login', (req, res) => {
     res.json({ unread: unreadCounts[req.params.login] || {} });
 });
 
-// Socket.io
 io.on('connection', (socket) => {
     console.log('✅ Пользователь подключился');
     socket.on('join', (chatId) => { socket.join(chatId); });
     socket.on('sendMessage', ({ chatId, from, text, time }) => {
+        const chat = globalChats.find(c => c.id === chatId);
+        if (chat && chat.isChannel && chat.creator !== from) {
+            socket.emit('error', 'Только создатель канала может писать');
+            return;
+        }
         const msg = { from, text, time: time || new Date().toLocaleTimeString() };
         if (!messages[chatId]) messages[chatId] = [];
         messages[chatId].push(msg);
         saveMessages();
-
-        const chat = globalChats.find(c => c.id === chatId);
         if (chat) {
             const recipients = chat.members || [];
             recipients.forEach(recipient => {
