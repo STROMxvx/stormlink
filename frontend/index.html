@@ -778,8 +778,93 @@
     let currentVideoBlob = null;
     let currentVideoStream = null;
     let currentFacingMode = 'user';
-    let typingTimeouts = {};
+        // ========== АВТОРИЗАЦИЯ ==========
+    async function renderAuth() {
+        document.getElementById('app').innerHTML = `
+            <div style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.8); display:flex; align-items:center; justify-content:center;">
+                <div class="auth-box">
+                    <h2 style="margin-bottom:20px;">⚡ STORMLINK</h2>
+                    <div class="auth-buttons">
+                        <button id="showLoginBtn" class="auth-btn">Вход</button>
+                        <button id="showRegBtn" class="auth-btn">Регистрация</button>
+                    </div>
+                    <div id="authForm"></div>
+                </div>
+            </div>
+        `;
+        document.getElementById('showLoginBtn').onclick = showLogin;
+        document.getElementById('showRegBtn').onclick = showRegister;
+        showLogin();
+    }
     
+    function showLogin() {
+        const authForm = document.getElementById('authForm');
+        if (!authForm) return;
+        authForm.innerHTML = `
+            <input type="text" id="login" placeholder="Логин">
+            <input type="password" id="password" placeholder="Пароль">
+            <button id="doLogin" class="auth-btn">Войти</button>
+        `;
+        document.getElementById('doLogin').onclick = async () => {
+            const login = document.getElementById('login').value;
+            const password = document.getElementById('password').value;
+            const res = await fetch('/login', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password }) });
+            const data = await res.json();
+            if (data.error) showToast(data.error, true);
+            else { 
+                currentUser = data.login; 
+                currentUserData = data.user; 
+                localStorage.setItem('authToken', data.user.token);
+                startMessenger(); 
+            }
+        };
+    }
+    
+    function showRegister() {
+        const authForm = document.getElementById('authForm');
+        if (!authForm) return;
+        authForm.innerHTML = `
+            <input type="text" id="regLogin" placeholder="Логин">
+            <input type="password" id="regPassword" placeholder="Пароль">
+            <input type="date" id="regBirthdate">
+            <textarea id="regAbout" rows="2" placeholder="О себе"></textarea>
+            <button id="doReg" class="auth-btn">Зарегистрироваться</button>
+        `;
+        document.getElementById('doReg').onclick = async () => {
+            const login = document.getElementById('regLogin').value;
+            const password = document.getElementById('regPassword').value;
+            const res = await fetch('/register', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ login, password, name: login, surname: '', birthdate: document.getElementById('regBirthdate').value, about: document.getElementById('regAbout').value }) });
+            const data = await res.json();
+            if (data.error) showToast(data.error, true);
+            else { 
+                showToast('Регистрация успешна! Войдите'); 
+                localStorage.setItem('authToken', data.token);
+                showLogin(); 
+            }
+        };
+    }
+        // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
+    const token = localStorage.getItem('authToken');
+    if (token) {
+        fetch('/auto-login', { 
+            method: 'POST', 
+            headers: { 'Content-Type': 'application/json' }, 
+            body: JSON.stringify({ token }) 
+        })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    currentUser = data.login;
+                    currentUserData = data.user;
+                    startMessenger();
+                } else {
+                    renderAuth();
+                }
+            })
+            .catch(() => renderAuth());
+    } else {
+        renderAuth();
+    }
     // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
     function saveAvatars() { localStorage.setItem('userAvatars', JSON.stringify(userAvatars)); }
@@ -3320,7 +3405,7 @@
         }, 30000);
     }
     
-    // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
+        // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
     const token = localStorage.getItem('authToken');
     if (token) {
         fetch('/auto-login', { 
