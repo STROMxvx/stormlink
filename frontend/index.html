@@ -75,34 +75,9 @@
             transition: transform 0.2s ease;
         }
         .search-header { padding: 16px; border-bottom: 1px solid #0af; }
-        .search-header input {
-            width: 100%;
-            padding: 10px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-            outline: none;
-            font-size: 14px;
-        }
-        .search-header input::placeholder { color: rgba(255,255,255,0.4); }
-        .section-header {
-            padding: 12px 16px;
-            border-bottom: 1px solid rgba(0,255,255,0.2);
-            font-size: 12px;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: #0af;
-        }
-        .list-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 12px;
-            display: flex;
-            flex-direction: column;
-            gap: 8px;
-        }
+        .search-header input { width: 100%; padding: 10px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; outline: none; font-size: 14px; }
+        .section-header { padding: 12px 16px; border-bottom: 1px solid rgba(0,255,255,0.2); font-size: 12px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; color: #0af; }
+        .list-container { flex: 1; overflow-y: auto; padding: 12px; display: flex; flex-direction: column; gap: 8px; }
         .list-item {
             background: rgba(0,255,255,0.05);
             border-radius: 24px;
@@ -128,7 +103,7 @@
             background-position: center;
             position: relative;
         }
-        .list-info { flex: 1; }
+        .list-info { flex: 1; min-width: 0; }
         .list-title { font-size: 15px; font-weight: bold; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .list-sub { font-size: 11px; opacity: 0.6; }
         .unread-badge { background: #ff3333; border-radius: 20px; padding: 2px 8px; font-size: 10px; font-weight: bold; }
@@ -166,6 +141,7 @@
             display: flex;
             flex-direction: column;
             gap: 8px;
+            position: relative;
         }
         .chat-search-bar {
             position: sticky;
@@ -180,27 +156,9 @@
             gap: 12px;
             z-index: 10;
         }
-        .chat-search-bar input {
-            flex: 1;
-            padding: 8px 16px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-            outline: none;
-            font-size: 13px;
-        }
-        .chat-search-bar input::placeholder { color: rgba(255,255,255,0.4); }
+        .chat-search-bar input { flex: 1; padding: 8px 16px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; outline: none; font-size: 13px; }
         .chat-search-nav { display: flex; gap: 8px; align-items: center; }
-        .chat-search-nav button {
-            background: #0af;
-            border: none;
-            border-radius: 20px;
-            padding: 5px 10px;
-            cursor: pointer;
-            font-size: 12px;
-            color: black;
-        }
+        .chat-search-nav button { background: #0af; border: none; border-radius: 20px; padding: 5px 10px; cursor: pointer; font-size: 12px; color: black; }
         .message {
             max-width: 70%;
             background: rgba(0,255,255,0.1);
@@ -251,13 +209,7 @@
             justify-content: flex-end;
         }
         .message:hover .message-actions { display: flex; }
-        .message-actions span {
-            cursor: pointer;
-            opacity: 0.7;
-            background: rgba(0,0,0,0.3);
-            padding: 2px 6px;
-            border-radius: 16px;
-        }
+        .message-actions span { cursor: pointer; opacity: 0.7; background: rgba(0,0,0,0.3); padding: 2px 6px; border-radius: 16px; }
         .message-actions span:hover { opacity: 1; background: cyan; color: black; }
         .edit-input {
             width: 100%;
@@ -278,33 +230,9 @@
             align-items: center;
             background: rgba(2,8,18,0.7);
         }
-        .chat-input input {
-            flex: 1;
-            padding: 10px;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-            outline: none;
-            font-size: 14px;
-        }
-        .chat-input input::placeholder { color: rgba(255,255,255,0.4); }
-        .chat-input button {
-            background: none;
-            border: none;
-            font-size: 22px;
-            cursor: pointer;
-            color: #0af;
-            padding: 0 10px;
-        }
-        .reply-indicator {
-            font-size: 12px;
-            opacity: 0.7;
-            margin-bottom: 4px;
-            border-left: 2px solid cyan;
-            padding-left: 8px;
-            margin: 0 16px;
-        }
+        .chat-input input { flex: 1; padding: 10px; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; outline: none; font-size: 14px; }
+        .chat-input button { background: none; border: none; font-size: 22px; cursor: pointer; color: #0af; padding: 0 10px; }
+        .reply-indicator { font-size: 12px; opacity: 0.7; margin-bottom: 4px; border-left: 2px solid cyan; padding-left: 8px; margin: 0 16px; }
         .voice-recording {
             display: flex;
             align-items: center;
@@ -393,15 +321,7 @@
             max-width: 90%;
             text-align: center;
         }
-        .auth-box input, .auth-box textarea {
-            width: 100%;
-            padding: 12px;
-            margin: 10px 0;
-            background: #010a1a;
-            border: 1px solid #0af;
-            border-radius: 40px;
-            color: white;
-        }
+        .auth-box input, .auth-box textarea { width: 100%; padding: 12px; margin: 10px 0; background: #010a1a; border: 1px solid #0af; border-radius: 40px; color: white; }
         .auth-buttons { display: flex; gap: 10px; margin: 20px 0; }
         .profile-card {
             background: #0c1322;
@@ -526,6 +446,20 @@
         }
         .hidden-chats-list { display: none; padding: 0 12px 12px 12px; flex-direction: column; gap: 8px; }
         .hidden-chats-list.show { display: flex; }
+        
+        /* Кнопка загрузки старых сообщений */
+        .load-more-btn {
+            text-align: center;
+            padding: 8px;
+            background: rgba(0,255,255,0.1);
+            border-radius: 20px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            font-size: 12px;
+            transition: 0.2s;
+        }
+        .load-more-btn:hover { background: rgba(0,255,255,0.2); }
+        
         .burger-btn {
             display: none;
             position: fixed;
@@ -542,6 +476,7 @@
             color: black;
         }
         .mobile-back-btn { display: none; background: none; border: none; color: cyan; font-size: 24px; cursor: pointer; padding: 4px 12px; }
+        
         @media (max-width: 768px) {
             body { padding: 0; }
             .messenger { width: 100%; height: 100vh; border-radius: 0; margin: 0; }
@@ -595,6 +530,8 @@
     let currentChatName = '';
     let allChats = [];
     let messagesData = {};
+    let messagesOffset = {}; // для пагинации: сколько сообщений загружено
+    let isLoadingMore = false;
     let mutedChats = JSON.parse(localStorage.getItem('mutedChats') || '{}');
     let userAvatars = JSON.parse(localStorage.getItem('userAvatars') || '{}');
     let deletedChats = JSON.parse(localStorage.getItem('deletedChats') || '[]');
@@ -626,12 +563,20 @@
     let groupRoles = JSON.parse(localStorage.getItem('groupRoles') || '{}');
     let groupBlacklist = JSON.parse(localStorage.getItem('groupBlacklist') || '{}');
     let fileUploads = {};
-    let offlineMessages = JSON.parse(localStorage.getItem('offlineMessages') || '{}');
     let currentVideoBlob = null;
     let currentVideoStream = null;
     let currentFacingMode = 'user';
     let typingTimeouts = {};
     let messageLoadPage = {};
+    
+    // Кэш данных для уменьшения запросов
+    let dataCache = {
+        users: null,
+        chats: null,
+        friends: null,
+        lastUpdate: 0
+    };
+    const CACHE_TTL = 5000; // 5 секунд кэш
     
     // ========== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==========
     function saveMuted() { localStorage.setItem('mutedChats', JSON.stringify(mutedChats)); }
@@ -645,7 +590,6 @@
     function saveChatSettings() { localStorage.setItem('chatSettings', JSON.stringify(chatSettings)); }
     function saveGroupRoles() { localStorage.setItem('groupRoles', JSON.stringify(groupRoles)); }
     function saveGroupBlacklist() { localStorage.setItem('groupBlacklist', JSON.stringify(groupBlacklist)); }
-    function saveOfflineMessages() { localStorage.setItem('offlineMessages', JSON.stringify(offlineMessages)); }
     
     function applyTheme() {
         const themesColors = {
@@ -761,20 +705,44 @@
             }
         };
     }
-        // ========== ЗАГРУЗКА ДАННЫХ ==========
-    async function loadAllData() {
+        // ========== ЗАГРУЗКА ДАННЫХ (ОПТИМИЗИРОВАННАЯ) ==========
+    async function loadAllData(force = false) {
+        const now = Date.now();
+        if (!force && dataCache.lastUpdate && (now - dataCache.lastUpdate) < CACHE_TTL) {
+            if (dataCache.users) allUsersList = dataCache.users;
+            if (dataCache.chats) { allChats = dataCache.chats; groups = allChats.filter(c => c.isGroup === true); channels = allChats.filter(c => c.isChannel === true); }
+            if (dataCache.friends) friends = dataCache.friends;
+            if (dataCache.friendRequests) friendRequests = dataCache.friendRequests;
+            if (dataCache.groupJoinRequests) groupJoinRequests = dataCache.groupJoinRequests;
+            if (dataCache.unreadData) unreadData = dataCache.unreadData;
+            
+            const favoritesId = `favorites_${currentUser}`;
+            if (!allChats.find(c => c.id === favoritesId)) {
+                allChats.unshift({ id: favoritesId, name: '⭐ Избранное', avatar: '⭐', isGroup: false, isChannel: false, members: [currentUser], isFavorites: true });
+            }
+            
+            updateFriendRequestBadge();
+            renderLeftPanelContent();
+            renderJoinRequestsInMenu();
+            applyTheme();
+            return;
+        }
+        
         await Promise.all([
-            fetch('/users').then(r => r.json()).then(data => { allUsersList = data.filter(u => u.login !== currentUser); }),
+            fetch('/users').then(r => r.json()).then(data => { allUsersList = data.filter(u => u.login !== currentUser); dataCache.users = allUsersList; }),
             fetch('/chats').then(r => r.json()).then(data => { 
                 allChats = data; 
                 groups = data.filter(c => c.isGroup === true); 
-                channels = data.filter(c => c.isChannel === true); 
+                channels = data.filter(c => c.isChannel === true);
+                dataCache.chats = allChats;
             }),
-            fetch(`/friends/${currentUser}`).then(r => r.json()).then(data => { friends = data.friends || []; }),
-            fetch(`/friend-requests/${currentUser}`).then(r => r.json()).then(data => { friendRequests = data.requests || []; }),
-            fetch(`/group-requests/${currentUser}`).then(r => r.json()).then(data => { groupJoinRequests = data.requests || []; }),
-            fetch(`/unread/${currentUser}`).then(r => r.json()).then(data => { unreadData = data.unread || {}; })
+            fetch(`/friends/${currentUser}`).then(r => r.json()).then(data => { friends = data.friends || []; dataCache.friends = friends; }),
+            fetch(`/friend-requests/${currentUser}`).then(r => r.json()).then(data => { friendRequests = data.requests || []; dataCache.friendRequests = friendRequests; }),
+            fetch(`/group-requests/${currentUser}`).then(r => r.json()).then(data => { groupJoinRequests = data.requests || []; dataCache.groupJoinRequests = groupJoinRequests; }),
+            fetch(`/unread/${currentUser}`).then(r => r.json()).then(data => { unreadData = data.unread || {}; dataCache.unreadData = unreadData; })
         ]);
+        
+        dataCache.lastUpdate = now;
         
         const favoritesId = `favorites_${currentUser}`;
         if (!allChats.find(c => c.id === favoritesId)) {
@@ -837,7 +805,8 @@
             btn.onclick = async (e) => { 
                 e.stopPropagation(); 
                 await fetch('/respond-group-request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ groupId: btn.dataset.group, fromUser: btn.dataset.user, toUser: currentUser, accept: true }) }); 
-                await loadAllData(); 
+                dataCache.lastUpdate = 0;
+                await loadAllData(true); 
                 showToast(`✅ Пользователь ${btn.dataset.user} принят в группу`); 
             }; 
         });
@@ -846,7 +815,8 @@
             btn.onclick = async (e) => { 
                 e.stopPropagation(); 
                 await fetch('/respond-group-request', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ groupId: btn.dataset.group, fromUser: btn.dataset.user, toUser: currentUser, accept: false }) }); 
-                await loadAllData(); 
+                dataCache.lastUpdate = 0;
+                await loadAllData(true); 
                 showToast(`❌ Заявка от ${btn.dataset.user} отклонена`); 
             }; 
         });
@@ -938,7 +908,8 @@
                     if (!sentFriendRequests.includes(login)) sentFriendRequests.push(login);
                     saveSentFriendRequests();
                     showToast(`📨 Заявка отправлена пользователю ${login}`);
-                    await loadAllData();
+                    dataCache.lastUpdate = 0;
+                    await loadAllData(true);
                 };
             });
             
@@ -949,7 +920,8 @@
                     sentFriendRequests = sentFriendRequests.filter(r => r !== login);
                     saveSentFriendRequests();
                     showToast(`✖ Заявка пользователю ${login} отменена`);
-                    await loadAllData();
+                    dataCache.lastUpdate = 0;
+                    await loadAllData(true);
                 };
             });
             
@@ -1138,14 +1110,16 @@
                     e.stopPropagation();
                     await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
                     showToast(`✅ ${from} теперь в ваших друзьях! 🎉`);
-                    await loadAllData();
+                    dataCache.lastUpdate = 0;
+                    await loadAllData(true);
                 };
                 
                 div.querySelector('.decline-friend-request').onclick = async (e) => {
                     e.stopPropagation();
                     await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from, to: currentUser }) });
                     showToast(`❌ Вы отклонили заявку от ${from}`);
-                    await loadAllData();
+                    dataCache.lastUpdate = 0;
+                    await loadAllData(true);
                 };
             });
         }
@@ -1170,8 +1144,7 @@
             if (arrow) arrow.innerHTML = hiddenList.classList.contains('show') ? '▼' : '▶';
         }
     };
-    
-    // ========== СОЗДАНИЕ ГРУПП И КАНАЛОВ ==========
+        // ========== СОЗДАНИЕ ГРУПП И КАНАЛОВ ==========
     function showCreateGroupModal() {
         let selectedEmoji = '👥';
         const modalDiv = document.createElement('div');
@@ -1219,7 +1192,8 @@
             if (data.chatId) {
                 groupRoles[data.chatId] = { [currentUser]: 'owner' };
                 saveGroupRoles();
-                await loadAllData();
+                dataCache.lastUpdate = 0;
+                await loadAllData(true);
                 showToast(`✅ Группа "${name}" создана!`);
                 modalDiv.remove();
             } else {
@@ -1274,7 +1248,8 @@
             });
             const data = await res.json();
             if (data.chatId) {
-                await loadAllData();
+                dataCache.lastUpdate = 0;
+                await loadAllData(true);
                 showToast(`✅ Канал "${name}" создан!`);
                 modalDiv.remove();
             } else {
@@ -1283,7 +1258,8 @@
         };
         modalDiv.querySelector('#cancelCreateChannel').onclick = () => modalDiv.remove();
     }
-        // ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==========
+    
+    // ========== ПРОФИЛЬ ПОЛЬЗОВАТЕЛЯ ==========
     window.showMyProfile = function() {
         const avatarUrl = userAvatars[currentUser] || null;
         const modalDiv = document.createElement('div');
@@ -1466,7 +1442,8 @@
                         showToast(`✖ Заявка пользователю ${login} отменена`);
                         modalDiv.remove();
                         if (parentModalToClose) parentModalToClose.remove();
-                        await loadAllData();
+                        dataCache.lastUpdate = 0;
+                        await loadAllData(true);
                     } else {
                         await fetch('/add-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: currentUser, to: login }) });
                         if (!sentFriendRequests.includes(login)) sentFriendRequests.push(login);
@@ -1474,7 +1451,8 @@
                         showToast(`📨 Заявка в друзья отправлена пользователю ${login}`);
                         modalDiv.remove();
                         if (parentModalToClose) parentModalToClose.remove();
-                        await loadAllData();
+                        dataCache.lastUpdate = 0;
+                        await loadAllData(true);
                     }
                 };
                 
@@ -1483,7 +1461,8 @@
                     if (!chat) {
                         const res = await fetch('/create-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ name: login, avatar: '💬', creator: currentUser, members: [currentUser, login], isGroup: false, isChannel: false }) });
                         const data = await res.json();
-                        await loadAllData();
+                        dataCache.lastUpdate = 0;
+                        await loadAllData(true);
                         chat = allChats.find(c => c.id === data.chatId);
                     }
                     if (chat) {
@@ -1562,7 +1541,8 @@
             document.getElementById('deleteGroupBtn').onclick = () => {
                 showConfirmDialog(`Удалить группу "${group.name}"? Это действие необратимо!`, async () => {
                     await fetch('/delete-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: group.id, userId: currentUser }) });
-                    await loadAllData();
+                    dataCache.lastUpdate = 0;
+                    await loadAllData(true);
                     if (currentChat === group.id) {
                         currentChat = `favorites_${currentUser}`;
                         currentChatName = 'Избранное';
@@ -1583,7 +1563,8 @@
                     if (group.members) {
                         group.members = group.members.filter(m => m !== user);
                         await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: group.id, memberLogin: user }) });
-                        await loadAllData();
+                        dataCache.lastUpdate = 0;
+                        await loadAllData(true);
                         showToast(`🔨 Пользователь ${user} исключён из группы`);
                         modalDiv.remove();
                     }
@@ -1645,7 +1626,8 @@
         if (!isSubscribed) {
             document.getElementById('subscribeBtn').onclick = async () => {
                 await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: channel.id, memberLogin: currentUser }) });
-                await loadAllData();
+                dataCache.lastUpdate = 0;
+                await loadAllData(true);
                 showToast(`✅ Вы подписались на канал ${channel.name}`);
                 modalDiv.remove();
             };
@@ -1655,7 +1637,8 @@
             document.getElementById('deleteChannelBtn').onclick = () => {
                 showConfirmDialog(`Удалить канал "${channel.name}"? Это действие необратимо!`, async () => {
                     await fetch('/delete-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId: channel.id, userId: currentUser }) });
-                    await loadAllData();
+                    dataCache.lastUpdate = 0;
+                    await loadAllData(true);
                     if (currentChat === channel.id) {
                         currentChat = `favorites_${currentUser}`;
                         currentChatName = 'Избранное';
@@ -1671,110 +1654,100 @@
         
         document.getElementById('closeChannelProfileBtn').onclick = () => modalDiv.remove();
     };
-    
-    // ========== ГЛОБАЛЬНЫЙ ПОИСК ==========
-    function openGlobalSearchModal() {
-        const modalDiv = document.createElement('div');
-        modalDiv.className = 'modal';
-        modalDiv.innerHTML = `
-            <div class="modal-box" style="width:500px; max-width:90%; max-height:80vh; overflow-y:auto;">
-                <h3 style="margin-bottom:16px;">🔍 Глобальный поиск</h3>
-                <input type="text" id="globalSearchInputModal" placeholder="Поиск по чатам, людям, сообщениям..." style="width:100%; padding:12px; margin-bottom:16px; background:#010a1a; border:1px solid #0af; border-radius:40px; color:white; outline:none;">
-                <div id="globalSearchResultsModal" style="max-height:50vh; overflow-y:auto;"></div>
-                <div class="modal-buttons"><button id="closeGlobalSearch">Закрыть</button></div>
-            </div>
-        `;
-        document.body.appendChild(modalDiv);
-        
-        const searchInput = modalDiv.querySelector('#globalSearchInputModal');
-        const resultsDiv = modalDiv.querySelector('#globalSearchResultsModal');
-        
-        const performSearch = () => {
-            const query = searchInput.value.toLowerCase().trim();
-            if (!query) { resultsDiv.innerHTML = '<div class="empty-state">🔍 Введите запрос</div>'; return; }
-            
-            const results = { chats: [], users: [], groups: [], channels: [], messages: [] };
-            
-            allChats.forEach(chat => {
-                if (chat.isGroup || chat.isChannel) return;
-                if (chat.name?.toLowerCase().includes(query)) results.chats.push(chat);
-            });
-            groups.forEach(group => { if (group.name?.toLowerCase().includes(query)) results.groups.push(group); });
-            channels.forEach(channel => { if (channel.name?.toLowerCase().includes(query)) results.channels.push(channel); });
-            allUsersList.forEach(user => { if (user.login.toLowerCase().includes(query)) results.users.push(user); });
-            
-            for (const chatId of Object.keys(messagesData)) {
-                const chat = allChats.find(c => c.id === chatId);
-                if (!chat) continue;
-                messagesData[chatId].forEach((msg, idx) => {
-                    if (msg.text && msg.text.toLowerCase().includes(query)) {
-                        results.messages.push({ chatId, chatName: chat.name, messageText: msg.text.substring(0, 80), messageFrom: msg.from, messageIndex: idx });
-                    }
-                });
-            }
-            
-            results.chats = results.chats.slice(0, 5);
-            results.users = results.users.slice(0, 5);
-            results.groups = results.groups.slice(0, 5);
-            results.channels = results.channels.slice(0, 5);
-            results.messages = results.messages.slice(0, 10);
-            
-            let html = '';
-            if (results.chats.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">💬 ЧАТЫ</div>`; results.chats.forEach(chat => { html += `<div class="search-result-item" data-type="chat" data-id="${chat.id}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div class="search-result-avatar" style="display:inline-block; width:36px;">💬</div> ${chat.name}</div>`; }); html += `</div>`; }
-            if (results.groups.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">👥 ГРУППЫ</div>`; results.groups.forEach(group => { html += `<div class="search-result-item" data-type="group" data-id="${group.id}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div class="search-result-avatar" style="display:inline-block; width:36px;">👥</div> ${group.name}</div>`; }); html += `</div>`; }
-            if (results.channels.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">📢 КАНАЛЫ</div>`; results.channels.forEach(channel => { html += `<div class="search-result-item" data-type="channel" data-id="${channel.id}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div class="search-result-avatar" style="display:inline-block; width:36px;">📢</div> ${channel.name}</div>`; }); html += `</div>`; }
-            if (results.users.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">👤 ПОЛЬЗОВАТЕЛИ</div>`; results.users.forEach(user => { html += `<div class="search-result-item" data-type="user" data-login="${user.login}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div class="search-result-avatar" style="display:inline-block; width:36px;">👤</div> ${user.login}</div>`; }); html += `</div>`; }
-            if (results.messages.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">💬 СООБЩЕНИЯ</div>`; results.messages.forEach(msg => { html += `<div class="search-result-item" data-type="message" data-chat-id="${msg.chatId}" data-message-index="${msg.messageIndex}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div class="search-result-avatar" style="display:inline-block; width:36px;">💬</div> ${msg.chatName}: ${msg.messageText.substring(0,50)}</div>`; }); html += `</div>`; }
-            if (!html) html = '<div class="empty-state">😔 Ничего не найдено</div>';
-            resultsDiv.innerHTML = html;
-            
-            resultsDiv.querySelectorAll('.search-result-item[data-type="chat"], .search-result-item[data-type="group"], .search-result-item[data-type="channel"]').forEach(el => {
-                el.onclick = () => { const chatId = el.dataset.id; const chat = allChats.find(c => c.id === chatId); if(chat){ currentChat = chatId; currentChatName = chat.name; document.getElementById('chatTitle').innerHTML = `<span>${currentChatName}</span>`; loadMessages(); socket.emit('join', currentChat); socket.emit('markRead', { chatId: currentChat, user: currentUser }); unreadData[currentChat] = 0; renderLeftPanelContent(); if(window.innerWidth <= 768) document.getElementById('contentPanel').classList.remove('open'); modalDiv.remove(); } };
-            });
-            resultsDiv.querySelectorAll('.search-result-item[data-type="user"]').forEach(el => { el.onclick = () => { modalDiv.remove(); window.showUserProfile(el.dataset.login); }; });
-            resultsDiv.querySelectorAll('.search-result-item[data-type="message"]').forEach(el => { el.onclick = () => { const chatId = el.dataset.chatId; const msgIdx = parseInt(el.dataset.messageIndex); const chat = allChats.find(c => c.id === chatId); if(chat){ currentChat = chatId; currentChatName = chat.name; document.getElementById('chatTitle').innerHTML = `<span>${currentChatName}</span>`; loadMessages(); socket.emit('join', currentChat); setTimeout(() => { const msgs = document.querySelectorAll('.message'); if(msgs[msgIdx]){ msgs[msgIdx].classList.add('highlight'); msgs[msgIdx].scrollIntoView(); setTimeout(() => msgs[msgIdx]?.classList.remove('highlight'), 3000); } }, 200); if(window.innerWidth <= 768) document.getElementById('contentPanel').classList.remove('open'); modalDiv.remove(); } }; });
-        };
-        
-        searchInput.oninput = performSearch;
-        modalDiv.querySelector('#closeGlobalSearch').onclick = () => modalDiv.remove();
-        searchInput.focus();
-        performSearch();
-    }
-    
-    // ========== ДРУЗЬЯ ==========
-    function showFriendsList() {
-        const modalDiv = document.createElement('div');
-        modalDiv.className = 'modal';
-        modalDiv.innerHTML = `
-            <div class="modal-box" style="width:350px; max-width:90%;">
-                <h3>👥 Друзья</h3>
-                <div id="friendsContainerModal" style="max-height:200px; overflow-y:auto;"></div>
-                <hr style="margin:15px 0; border-color:#0af;">
-                <h3>📨 Заявки в друзья</h3>
-                <div id="friendRequestsContainerModal" style="max-height:200px; overflow-y:auto;"></div>
-                <button id="closeFriendsModal" class="auth-btn" style="margin-top:16px;">Закрыть</button>
-            </div>
-        `;
-        document.body.appendChild(modalDiv);
-        
-        const friendsContainer = modalDiv.querySelector('#friendsContainerModal');
-        if (!friends || friends.length === 0) { friendsContainer.innerHTML = '<div class="empty-state">Нет друзей</div>'; }
-        else { friends.forEach(login => { const div = document.createElement('div'); div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; cursor:pointer; border-radius:20px; margin:5px 0; background:rgba(0,255,255,0.05);'; div.innerHTML = `<div class="list-avatar" style="width:40px; height:40px; ${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}<div class="online-dot ${onlineUsers[login] ? 'online' : ''}"></div></div><div style="flex:1;"><strong>${login}</strong><br><span style="font-size:11px;">${onlineUsers[login] ? 'онлайн' : 'оффлайн'}</span></div>`; div.onclick = () => { modalDiv.remove(); window.showUserProfile(login); }; friendsContainer.appendChild(div); }); }
-        
-        const requestsContainer = modalDiv.querySelector('#friendRequestsContainerModal');
-        if (!friendRequests || friendRequests.length === 0) { requestsContainer.innerHTML = '<div class="empty-state">Нет заявок</div>'; }
-        else { friendRequests.forEach(from => { const div = document.createElement('div'); div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; border-radius:20px; margin:5px 0; background:rgba(255,100,0,0.2);'; div.innerHTML = `<div style="width:40px;height:40px;background:#ff6600;border-radius:50%;display:flex;align-items:center;justify-content:center;">❓</div><div style="flex:1;"><strong>${from}</strong><br><small>хочет добавить в друзья</small></div><div style="display:flex; gap:8px;"><button class="accept-friend-modal" data-from="${from}" style="background:#0af; border:none; border-radius:20px; padding:6px 12px; cursor:pointer;">✅</button><button class="decline-friend-modal" data-from="${from}" style="background:#ff6600; border:none; border-radius:20px; padding:6px 12px; cursor:pointer;">❌</button></div></div>`; requestsContainer.appendChild(div); });
-            modalDiv.querySelectorAll('.accept-friend-modal').forEach(btn => { btn.onclick = async () => { await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: btn.dataset.from, to: currentUser }) }); showToast(`✅ ${btn.dataset.from} теперь в друзьях!`); modalDiv.remove(); await loadAllData(); }; });
-            modalDiv.querySelectorAll('.decline-friend-modal').forEach(btn => { btn.onclick = async () => { await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: btn.dataset.from, to: currentUser }) }); showToast(`❌ Заявка от ${btn.dataset.from} отклонена`); modalDiv.remove(); await loadAllData(); }; });
-        }
-        
-        modalDiv.querySelector('#closeFriendsModal').onclick = () => modalDiv.remove();
-    }
-        // ========== РЕНДЕР СООБЩЕНИЙ ==========
+        // ========== РЕНДЕР СООБЩЕНИЙ (ОПТИМИЗИРОВАННЫЙ) ==========
     function getAvatarForUser(login) {
         const avatar = userAvatars[login];
         if (avatar) return `<div class="message-avatar" data-user="${login}" onclick="window.showUserProfile('${login}')" style="background-image:url(${avatar}); background-size:cover;"><div class="online-dot ${onlineUsers[login] ? 'online' : ''}"></div></div>`;
         return `<div class="message-avatar" data-user="${login}" onclick="window.showUserProfile('${login}')">⚡<div class="online-dot ${onlineUsers[login] ? 'online' : ''}"></div></div>`;
+    }
+    
+    // Добавление одного сообщения (без перерисовки всех)
+    function appendMessage(msg, isNew = true) {
+        const container = document.getElementById('messagesList');
+        if (!container) return;
+        
+        const isPinned = pinnedMessages[currentChat]?.some(p => p.messageIndex === (messagesData[currentChat]?.length - 1));
+        const replyHtml = msg.replyTo ? `<div style="font-size:10px; opacity:0.5; margin-bottom:4px;">↩️ Ответ ${msg.replyTo.from}: "${msg.replyTo.text.substring(0,30)}"</div>` : '';
+        
+        const msgDiv = document.createElement('div');
+        msgDiv.className = `message ${msg.from === currentUser ? 'my-message' : ''} ${isPinned ? 'pinned' : ''}`;
+        msgDiv.setAttribute('data-idx', messagesData[currentChat]?.length - 1);
+        msgDiv.innerHTML = `
+            ${isPinned ? '<div class="pin-badge">📌</div>' : ''}
+            <div class="message-avatar" onclick="window.showUserProfile('${msg.from}')">${getAvatarForUser(msg.from)}</div>
+            <div class="message-content">
+                ${replyHtml}
+                <strong>${msg.from}:</strong> ${msg.text}<br>
+                <small>${msg.time}</small>
+                <div class="message-actions">
+                    <span class="reply-action">↩️ Ответить</span>
+                    <span class="forward-action">📤 Переслать</span>
+                    <span class="pin-action">📌 Закрепить</span>
+                    ${msg.from === currentUser ? '<span class="edit-action">✏️ Редактировать</span>' : ''}
+                    ${msg.from === currentUser ? '<span class="delete-action">🗑️ Удалить</span>' : ''}
+                </div>
+            </div>
+        `;
+        
+        if (isNew) {
+            container.appendChild(msgDiv);
+            container.scrollTop = container.scrollHeight;
+        } else {
+            container.insertBefore(msgDiv, container.firstChild);
+        }
+        
+        // Добавляем обработчики для нового сообщения
+        attachMessageHandlers(msgDiv, msg);
+    }
+    
+    function attachMessageHandlers(msgDiv, msg) {
+        const idx = msgDiv.dataset.idx;
+        
+        msgDiv.querySelector('.reply-action')?.addEventListener('click', () => {
+            replyTo = { text: msg.text, from: msg.from };
+            document.getElementById('msgInput').focus();
+            document.getElementById('replyIndicator').innerHTML = `
+                <span>↩️ Ответ ${replyTo.from}: "${replyTo.text.substring(0,40)}"</span>
+                <button id="cancelReplyBtn" style="background:none; border:none; color:cyan; cursor:pointer;">✖ Отмена</button>
+            `;
+            document.getElementById('cancelReplyBtn').onclick = () => {
+                replyTo = null;
+                document.getElementById('replyIndicator').innerHTML = '';
+            };
+        });
+        
+        msgDiv.querySelector('.pin-action')?.addEventListener('click', () => {
+            if (!pinnedMessages[currentChat]) pinnedMessages[currentChat] = [];
+            const exists = pinnedMessages[currentChat].some(p => p.messageIndex == idx);
+            if (exists) {
+                pinnedMessages[currentChat] = pinnedMessages[currentChat].filter(p => p.messageIndex != idx);
+                showToast('📌 Сообщение откреплено');
+            } else {
+                if (pinnedMessages[currentChat].length >= 3) {
+                    showToast('⚠️ Нельзя закрепить более 3 сообщений', true);
+                    return;
+                }
+                pinnedMessages[currentChat].push({ messageIndex: parseInt(idx), text: msg.text, from: msg.from, time: msg.time });
+                showToast('📌 Сообщение закреплено');
+            }
+            savePinnedMessages();
+            renderMessages();
+        });
+        
+        msgDiv.querySelector('.edit-action')?.addEventListener('click', () => {
+            if (msg.from === currentUser) {
+                editingMessage = { chatId: currentChat, messageIndex: parseInt(idx), oldText: msg.text };
+                renderMessages();
+            } else {
+                showToast('❌ Можно редактировать только свои сообщения', true);
+            }
+        });
+        
+        msgDiv.querySelector('.delete-action')?.addEventListener('click', () => {
+            showConfirmDialog('🗑️ Удалить сообщение?', () => {
+                socket.emit('deleteMessage', { chatId: currentChat, messageIndex: parseInt(idx) });
+            });
+        });
     }
     
     function renderMessages() {
@@ -1796,13 +1769,23 @@
             <div id="typingIndicator" style="font-size:12px; opacity:0.7; padding:4px 8px; display:none;"></div>
         `;
         
+        // Кнопка загрузки старых сообщений
+        if (messagesOffset[currentChat] > 0 && msgs.length >= 30) {
+            const loadMoreBtn = document.createElement('div');
+            loadMoreBtn.className = 'load-more-btn';
+            loadMoreBtn.innerText = '⬆️ Загрузить старые сообщения';
+            loadMoreBtn.onclick = loadMoreMessages;
+            container.appendChild(loadMoreBtn);
+        }
+        
         if (pinned.length) {
-            container.innerHTML += `
-                <div style="background:rgba(255,204,0,0.1); border-radius:16px; padding:8px; margin-bottom:12px;">
-                    <div style="color:#ffcc00; font-size:12px; margin-bottom:6px;">📌 Закреплённые (${pinned.length}/3)</div>
-                    ${pinned.map(p => `<div style="font-size:12px; padding:4px 0; border-bottom:1px solid rgba(255,204,0,0.2);"><strong>${p.from}:</strong> ${p.text.substring(0,50)}${p.text.length>50?'...':''}</div>`).join('')}
-                </div>
-            `;
+            const pinnedDiv = document.createElement('div');
+            pinnedDiv.style.cssText = 'background:rgba(255,204,0,0.1); border-radius:16px; padding:8px; margin-bottom:12px;';
+            pinnedDiv.innerHTML = `<div style="color:#ffcc00; font-size:12px; margin-bottom:6px;">📌 Закреплённые (${pinned.length}/3)</div>`;
+            pinned.forEach(p => {
+                pinnedDiv.innerHTML += `<div style="font-size:12px; padding:4px 0; border-bottom:1px solid rgba(255,204,0,0.2);"><strong>${p.from}:</strong> ${p.text.substring(0,50)}${p.text.length>50?'...':''}</div>`;
+            });
+            container.appendChild(pinnedDiv);
         }
         
         if (msgs.length === 0) {
@@ -1816,126 +1799,65 @@
             const replyHtml = msg.replyTo ? `<div style="font-size:10px; opacity:0.5; margin-bottom:4px;">↩️ Ответ ${msg.replyTo.from}: "${msg.replyTo.text.substring(0,30)}"</div>` : '';
             
             if (isEditing) {
-                container.innerHTML += `
-                    <div class="message editing" data-idx="${idx}">
-                        <div class="message-avatar" onclick="window.showUserProfile('${msg.from}')">${getAvatarForUser(msg.from)}</div>
-                        <div class="message-content">
-                            <input type="text" id="editMsgInput-${idx}" class="edit-input" value="${msg.text.replace(/"/g, '&quot;')}">
-                            <div style="display:flex; gap:8px; margin-top:6px;">
-                                <button class="save-edit-msg" data-idx="${idx}" style="background:#0af; border:none; border-radius:20px; padding:4px 12px; cursor:pointer;">💾 Сохранить</button>
-                                <button class="cancel-edit-msg" style="background:#666; border:none; border-radius:20px; padding:4px 12px; cursor:pointer;">✖ Отмена</button>
-                            </div>
+                const editDiv = document.createElement('div');
+                editDiv.className = 'message editing';
+                editDiv.setAttribute('data-idx', idx);
+                editDiv.innerHTML = `
+                    <div class="message-avatar" onclick="window.showUserProfile('${msg.from}')">${getAvatarForUser(msg.from)}</div>
+                    <div class="message-content">
+                        <input type="text" id="editMsgInput-${idx}" class="edit-input" value="${msg.text.replace(/"/g, '&quot;')}">
+                        <div style="display:flex; gap:8px; margin-top:6px;">
+                            <button class="save-edit-msg" data-idx="${idx}" style="background:#0af; border:none; border-radius:20px; padding:4px 12px; cursor:pointer;">💾 Сохранить</button>
+                            <button class="cancel-edit-msg" style="background:#666; border:none; border-radius:20px; padding:4px 12px; cursor:pointer;">✖ Отмена</button>
                         </div>
                     </div>
                 `;
+                container.appendChild(editDiv);
+                
+                editDiv.querySelector('.save-edit-msg').onclick = () => {
+                    const newText = document.getElementById(`editMsgInput-${idx}`).value.trim();
+                    if (newText) {
+                        if (socket) {
+                            socket.emit('editMessage', { chatId: currentChat, messageIndex: idx, newText, from: currentUser });
+                        } else {
+                            messagesData[currentChat][idx].text = newText;
+                        }
+                        editingMessage = null;
+                        renderMessages();
+                    } else {
+                        showToast('❌ Сообщение не может быть пустым', true);
+                    }
+                };
+                editDiv.querySelector('.cancel-edit-msg').onclick = () => {
+                    editingMessage = null;
+                    renderMessages();
+                };
             } else {
-                container.innerHTML += `
-                    <div class="message ${msg.from === currentUser ? 'my-message' : ''} ${isPinned ? 'pinned' : ''}" data-idx="${idx}">
-                        ${isPinned ? '<div class="pin-badge">📌</div>' : ''}
-                        <div class="message-avatar" onclick="window.showUserProfile('${msg.from}')">${getAvatarForUser(msg.from)}</div>
-                        <div class="message-content">
-                            ${replyHtml}
-                            <strong>${msg.from}:</strong> ${msg.text}<br>
-                            <small>${msg.time}</small>
-                            <div class="message-actions">
-                                <span class="reply-action">↩️ Ответить</span>
-                                <span class="forward-action">📤 Переслать</span>
-                                <span class="pin-action">📌 Закрепить</span>
-                                ${msg.from === currentUser ? '<span class="edit-action">✏️ Редактировать</span>' : ''}
-                                ${msg.from === currentUser ? '<span class="delete-action">🗑️ Удалить</span>' : ''}
-                            </div>
+                const msgDiv = document.createElement('div');
+                msgDiv.className = `message ${msg.from === currentUser ? 'my-message' : ''} ${isPinned ? 'pinned' : ''}`;
+                msgDiv.setAttribute('data-idx', idx);
+                msgDiv.innerHTML = `
+                    ${isPinned ? '<div class="pin-badge">📌</div>' : ''}
+                    <div class="message-avatar" onclick="window.showUserProfile('${msg.from}')">${getAvatarForUser(msg.from)}</div>
+                    <div class="message-content">
+                        ${replyHtml}
+                        <strong>${msg.from}:</strong> ${msg.text}<br>
+                        <small>${msg.time}</small>
+                        <div class="message-actions">
+                            <span class="reply-action">↩️ Ответить</span>
+                            <span class="forward-action">📤 Переслать</span>
+                            <span class="pin-action">📌 Закрепить</span>
+                            ${msg.from === currentUser ? '<span class="edit-action">✏️ Редактировать</span>' : ''}
+                            ${msg.from === currentUser ? '<span class="delete-action">🗑️ Удалить</span>' : ''}
                         </div>
                     </div>
                 `;
+                container.appendChild(msgDiv);
+                attachMessageHandlers(msgDiv, msg);
             }
         });
         
-        document.querySelectorAll('.reply-action').forEach(el => {
-            el.onclick = () => {
-                const idx = el.closest('.message').dataset.idx;
-                const msg = messagesData[currentChat][idx];
-                replyTo = { text: msg.text, from: msg.from };
-                document.getElementById('msgInput').focus();
-                document.getElementById('replyIndicator').innerHTML = `
-                    <span>↩️ Ответ ${replyTo.from}: "${replyTo.text.substring(0,40)}"</span>
-                    <button id="cancelReplyBtn" style="background:none; border:none; color:cyan; cursor:pointer;">✖ Отмена</button>
-                `;
-                document.getElementById('cancelReplyBtn').onclick = () => {
-                    replyTo = null;
-                    document.getElementById('replyIndicator').innerHTML = '';
-                };
-            };
-        });
-        
         document.querySelectorAll('.forward-action').forEach(el => { el.onclick = () => showToast('📤 Пересылка в разработке'); });
-        
-        document.querySelectorAll('.pin-action').forEach(el => {
-            el.onclick = () => {
-                const idx = parseInt(el.closest('.message').dataset.idx);
-                const msg = messagesData[currentChat][idx];
-                if (!pinnedMessages[currentChat]) pinnedMessages[currentChat] = [];
-                if (pinnedMessages[currentChat].some(p => p.messageIndex === idx)) {
-                    pinnedMessages[currentChat] = pinnedMessages[currentChat].filter(p => p.messageIndex !== idx);
-                    showToast('📌 Сообщение откреплено');
-                } else {
-                    if (pinnedMessages[currentChat].length >= 3) {
-                        showToast('⚠️ Нельзя закрепить более 3 сообщений', true);
-                        return;
-                    }
-                    pinnedMessages[currentChat].push({ messageIndex: idx, text: msg.text, from: msg.from, time: msg.time });
-                    showToast('📌 Сообщение закреплено');
-                }
-                savePinnedMessages();
-                renderMessages();
-            };
-        });
-        
-        document.querySelectorAll('.edit-action').forEach(el => {
-            el.onclick = () => {
-                const idx = parseInt(el.closest('.message').dataset.idx);
-                const msg = messagesData[currentChat][idx];
-                if (msg && msg.from === currentUser) {
-                    editingMessage = { chatId: currentChat, messageIndex: idx, oldText: msg.text };
-                    renderMessages();
-                } else {
-                    showToast('❌ Можно редактировать только свои сообщения', true);
-                }
-            };
-        });
-        
-        document.querySelectorAll('.save-edit-msg').forEach(btn => {
-            btn.onclick = () => {
-                const idx = parseInt(btn.dataset.idx);
-                const newText = document.getElementById(`editMsgInput-${idx}`).value.trim();
-                if (newText) {
-                    if (socket) {
-                        socket.emit('editMessage', { chatId: currentChat, messageIndex: idx, newText, from: currentUser });
-                    } else {
-                        messagesData[currentChat][idx].text = newText;
-                    }
-                    editingMessage = null;
-                    renderMessages();
-                } else {
-                    showToast('❌ Сообщение не может быть пустым', true);
-                }
-            };
-        });
-        
-        document.querySelectorAll('.cancel-edit-msg').forEach(btn => {
-            btn.onclick = () => {
-                editingMessage = null;
-                renderMessages();
-            };
-        });
-        
-        document.querySelectorAll('.delete-action').forEach(el => {
-            el.onclick = () => {
-                const idx = el.closest('.message').dataset.idx;
-                showConfirmDialog('🗑️ Удалить сообщение?', () => {
-                    socket.emit('deleteMessage', { chatId: currentChat, messageIndex: idx });
-                });
-            };
-        });
         
         const searchMsgInput = document.getElementById('messageSearchInput');
         if (searchMsgInput) searchMsgInput.oninput = performSearchInMessages;
@@ -1944,6 +1866,30 @@
         document.getElementById('searchCloseBtn')?.addEventListener('click', closeSearch);
         
         container.scrollTop = container.scrollHeight;
+    }
+    
+    // Загрузка старых сообщений (пагинация)
+    async function loadMoreMessages() {
+        if (isLoadingMore) return;
+        isLoadingMore = true;
+        const currentOffset = messagesOffset[currentChat] || 30;
+        const newOffset = currentOffset + 30;
+        
+        try {
+            const res = await fetch(`/messages/${currentChat}?offset=${currentOffset}&limit=30`);
+            const oldMessages = await res.json();
+            if (oldMessages.length > 0) {
+                messagesData[currentChat] = [...oldMessages, ...messagesData[currentChat]];
+                messagesOffset[currentChat] = newOffset;
+                renderMessages();
+                showToast(`📜 Загружено ${oldMessages.length} старых сообщений`);
+            } else {
+                showToast('📜 Больше нет сообщений');
+            }
+        } catch(e) {
+            console.error('Ошибка загрузки старых сообщений');
+        }
+        isLoadingMore = false;
     }
     
     function performSearchInMessages() {
@@ -2023,11 +1969,13 @@
         if (currentChat === `favorites_${currentUser}`) {
             const favKey = `favorites_${currentUser}`;
             messagesData[currentChat] = JSON.parse(localStorage.getItem(favKey) || '[]');
+            messagesOffset[currentChat] = messagesData[currentChat].length;
             renderMessages();
             return;
         }
-        const res = await fetch(`/messages/${currentChat}`);
+        const res = await fetch(`/messages/${currentChat}?limit=30`);
         messagesData[currentChat] = await res.json();
+        messagesOffset[currentChat] = 30;
         renderMessages();
     }
     
@@ -2102,7 +2050,6 @@
             const constraints = { video: { facingMode: currentFacingMode }, audio: true };
             currentVideoStream = await navigator.mediaDevices.getUserMedia(constraints);
             
-            // Показываем предпросмотр
             const previewDiv = document.createElement('div');
             previewDiv.id = 'videoRecordingPreview';
             previewDiv.style.cssText = 'position:fixed; bottom:100px; right:20px; width:100px; height:100px; border-radius:50%; overflow:hidden; border:3px solid #ff3333; z-index:2000; background:#000;';
@@ -2174,6 +2121,19 @@
         input.onchange = (e) => {
             const file = e.target.files[0];
             if (!file) return;
+            
+            // Показываем прогресс
+            const msgDiv = document.createElement('div');
+            msgDiv.className = 'message my-message';
+            msgDiv.style.position = 'relative';
+            msgDiv.innerHTML = `
+                <div class="message-content">
+                    📤 Загрузка: ${file.name}
+                    <div class="progress-bar-container"><div class="progress-bar" style="width:0%"></div></div>
+                </div>
+            `;
+            document.getElementById('messagesList').appendChild(msgDiv);
+            
             const reader = new FileReader();
             reader.onload = ev => {
                 let html = '';
@@ -2181,8 +2141,18 @@
                 else if (file.type.startsWith('video/')) html = `<video src="${ev.target.result}" controls style="max-width:200px; border-radius:12px;"></video>`;
                 else html = `<div style="padding:8px; background:rgba(0,0,0,0.3); border-radius:12px; display:inline-block;">📎 ${file.name}</div>`;
                 socket.emit('sendMessage', { chatId: currentChat, from: currentUser, text: html, time: getFormattedTime() });
+                msgDiv.remove();
             };
             reader.readAsDataURL(file);
+            
+            // Симуляция прогресса
+            let progress = 0;
+            const interval = setInterval(() => {
+                progress += 10;
+                const progressBar = msgDiv.querySelector('.progress-bar');
+                if (progressBar) progressBar.style.width = Math.min(progress, 100) + '%';
+                if (progress >= 100) clearInterval(interval);
+            }, 100);
         };
         input.click();
     }
@@ -2214,7 +2184,35 @@
         modalDiv.querySelector('#closeEmoji').onclick = () => modalDiv.remove();
     }
     
-    // ========== МЕНЮ ЧАТА ==========
+    // ========== ДРУЗЬЯ ==========
+    function showFriendsList() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
+            <div class="modal-box" style="width:350px; max-width:90%;">
+                <h3>👥 Друзья</h3>
+                <div id="friendsContainerModal" style="max-height:200px; overflow-y:auto;"></div>
+                <hr style="margin:15px 0; border-color:#0af;">
+                <h3>📨 Заявки в друзья</h3>
+                <div id="friendRequestsContainerModal" style="max-height:200px; overflow-y:auto;"></div>
+                <button id="closeFriendsModal" class="auth-btn" style="margin-top:16px;">Закрыть</button>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        
+        const friendsContainer = modalDiv.querySelector('#friendsContainerModal');
+        if (!friends || friends.length === 0) { friendsContainer.innerHTML = '<div class="empty-state">Нет друзей</div>'; }
+        else { friends.forEach(login => { const div = document.createElement('div'); div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; cursor:pointer; border-radius:20px; margin:5px 0; background:rgba(0,255,255,0.05);'; div.innerHTML = `<div class="list-avatar" style="width:40px; height:40px; ${userAvatars[login] ? `background-image:url(${userAvatars[login]}); background-size:cover;` : ''}">${!userAvatars[login] ? '👤' : ''}<div class="online-dot ${onlineUsers[login] ? 'online' : ''}"></div></div><div style="flex:1;"><strong>${login}</strong><br><span style="font-size:11px;">${onlineUsers[login] ? 'онлайн' : 'оффлайн'}</span></div>`; div.onclick = () => { modalDiv.remove(); window.showUserProfile(login); }; friendsContainer.appendChild(div); }); }
+        
+        const requestsContainer = modalDiv.querySelector('#friendRequestsContainerModal');
+        if (!friendRequests || friendRequests.length === 0) { requestsContainer.innerHTML = '<div class="empty-state">Нет заявок</div>'; }
+        else { friendRequests.forEach(from => { const div = document.createElement('div'); div.style.cssText = 'display:flex; align-items:center; gap:12px; padding:10px; border-radius:20px; margin:5px 0; background:rgba(255,100,0,0.2);'; div.innerHTML = `<div style="width:40px;height:40px;background:#ff6600;border-radius:50%;display:flex;align-items:center;justify-content:center;">❓</div><div style="flex:1;"><strong>${from}</strong><br><small>хочет добавить в друзья</small></div><div style="display:flex; gap:8px;"><button class="accept-friend-modal" data-from="${from}" style="background:#0af; border:none; border-radius:20px; padding:6px 12px; cursor:pointer;">✅</button><button class="decline-friend-modal" data-from="${from}" style="background:#ff6600; border:none; border-radius:20px; padding:6px 12px; cursor:pointer;">❌</button></div></div>`; requestsContainer.appendChild(div); });
+            modalDiv.querySelectorAll('.accept-friend-modal').forEach(btn => { btn.onclick = async () => { await fetch('/accept-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: btn.dataset.from, to: currentUser }) }); showToast(`✅ ${btn.dataset.from} теперь в друзьях!`); modalDiv.remove(); dataCache.lastUpdate = 0; await loadAllData(true); }; });
+            modalDiv.querySelectorAll('.decline-friend-modal').forEach(btn => { btn.onclick = async () => { await fetch('/decline-friend', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ from: btn.dataset.from, to: currentUser }) }); showToast(`❌ Заявка от ${btn.dataset.from} отклонена`); modalDiv.remove(); dataCache.lastUpdate = 0; await loadAllData(true); }; });
+        }
+        modalDiv.querySelector('#closeFriendsModal').onclick = () => modalDiv.remove();
+    }
+        // ========== МЕНЮ ЧАТА ==========
     function showChatMenu() {
         const menu = document.createElement('div');
         menu.className = 'chat-menu';
@@ -2311,7 +2309,8 @@
     async function deleteGroup(chatId, chatName) {
         showConfirmDialog(`Удалить группу "${chatName}"?`, async () => {
             await fetch('/delete-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, userId: currentUser }) });
-            await loadAllData();
+            dataCache.lastUpdate = 0;
+            await loadAllData(true);
             if (currentChat === chatId) {
                 currentChat = `favorites_${currentUser}`;
                 currentChatName = 'Избранное';
@@ -2326,7 +2325,8 @@
     async function deleteChannel(chatId, chatName) {
         showConfirmDialog(`Удалить канал "${chatName}"?`, async () => {
             await fetch('/delete-chat', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, userId: currentUser }) });
-            await loadAllData();
+            dataCache.lastUpdate = 0;
+            await loadAllData(true);
             if (currentChat === chatId) {
                 currentChat = `favorites_${currentUser}`;
                 currentChatName = 'Избранное';
@@ -2344,7 +2344,8 @@
             if (chat && chat.members) {
                 chat.members = chat.members.filter(m => m !== currentUser);
                 await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, memberLogin: currentUser }) });
-                await loadAllData();
+                dataCache.lastUpdate = 0;
+                await loadAllData(true);
                 if (currentChat === chatId) {
                     currentChat = `favorites_${currentUser}`;
                     currentChatName = 'Избранное';
@@ -2363,7 +2364,8 @@
             if (chat && chat.members) {
                 chat.members = chat.members.filter(m => m !== currentUser);
                 await fetch('/add-member', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ chatId, memberLogin: currentUser }) });
-                await loadAllData();
+                dataCache.lastUpdate = 0;
+                await loadAllData(true);
                 if (currentChat === chatId) {
                     currentChat = `favorites_${currentUser}`;
                     currentChatName = 'Избранное';
@@ -2375,7 +2377,77 @@
             }
         });
     }
-        // ========== ЗАПУСК МЕССЕНДЖЕРА ==========
+    
+    // ========== ГЛОБАЛЬНЫЙ ПОИСК ==========
+    function openGlobalSearchModal() {
+        const modalDiv = document.createElement('div');
+        modalDiv.className = 'modal';
+        modalDiv.innerHTML = `
+            <div class="modal-box" style="width:500px; max-width:90%; max-height:80vh; overflow-y:auto;">
+                <h3 style="margin-bottom:16px;">🔍 Глобальный поиск</h3>
+                <input type="text" id="globalSearchInputModal" placeholder="Поиск по чатам, людям, сообщениям..." style="width:100%; padding:12px; margin-bottom:16px; background:#010a1a; border:1px solid #0af; border-radius:40px; color:white; outline:none;">
+                <div id="globalSearchResultsModal" style="max-height:50vh; overflow-y:auto;"></div>
+                <div class="modal-buttons"><button id="closeGlobalSearch">Закрыть</button></div>
+            </div>
+        `;
+        document.body.appendChild(modalDiv);
+        
+        const searchInput = modalDiv.querySelector('#globalSearchInputModal');
+        const resultsDiv = modalDiv.querySelector('#globalSearchResultsModal');
+        
+        const performSearch = () => {
+            const query = searchInput.value.toLowerCase().trim();
+            if (!query) { resultsDiv.innerHTML = '<div class="empty-state">🔍 Введите запрос</div>'; return; }
+            
+            const results = { chats: [], users: [], groups: [], channels: [], messages: [] };
+            
+            allChats.forEach(chat => {
+                if (chat.isGroup || chat.isChannel) return;
+                if (chat.name?.toLowerCase().includes(query)) results.chats.push(chat);
+            });
+            groups.forEach(group => { if (group.name?.toLowerCase().includes(query)) results.groups.push(group); });
+            channels.forEach(channel => { if (channel.name?.toLowerCase().includes(query)) results.channels.push(channel); });
+            allUsersList.forEach(user => { if (user.login.toLowerCase().includes(query)) results.users.push(user); });
+            
+            for (const chatId of Object.keys(messagesData)) {
+                const chat = allChats.find(c => c.id === chatId);
+                if (!chat) continue;
+                messagesData[chatId].forEach((msg, idx) => {
+                    if (msg.text && msg.text.toLowerCase().includes(query)) {
+                        results.messages.push({ chatId, chatName: chat.name, messageText: msg.text.substring(0, 80), messageFrom: msg.from, messageIndex: idx });
+                    }
+                });
+            }
+            
+            results.chats = results.chats.slice(0, 5);
+            results.users = results.users.slice(0, 5);
+            results.groups = results.groups.slice(0, 5);
+            results.channels = results.channels.slice(0, 5);
+            results.messages = results.messages.slice(0, 10);
+            
+            let html = '';
+            if (results.chats.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">💬 ЧАТЫ</div>`; results.chats.forEach(chat => { html += `<div class="search-result-item" data-type="chat" data-id="${chat.id}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div style="display:inline-block; width:36px;">💬</div> ${chat.name}</div>`; }); html += `</div>`; }
+            if (results.groups.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">👥 ГРУППЫ</div>`; results.groups.forEach(group => { html += `<div class="search-result-item" data-type="group" data-id="${group.id}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div style="display:inline-block; width:36px;">👥</div> ${group.name}</div>`; }); html += `</div>`; }
+            if (results.channels.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">📢 КАНАЛЫ</div>`; results.channels.forEach(channel => { html += `<div class="search-result-item" data-type="channel" data-id="${channel.id}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div style="display:inline-block; width:36px;">📢</div> ${channel.name}</div>`; }); html += `</div>`; }
+            if (results.users.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">👤 ПОЛЬЗОВАТЕЛИ</div>`; results.users.forEach(user => { html += `<div class="search-result-item" data-type="user" data-login="${user.login}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div style="display:inline-block; width:36px;">👤</div> ${user.login}</div>`; }); html += `</div>`; }
+            if (results.messages.length) { html += `<div class="search-category"><div style="color:#0af; font-size:12px;">💬 СООБЩЕНИЯ</div>`; results.messages.forEach(msg => { html += `<div class="search-result-item" data-type="message" data-chat-id="${msg.chatId}" data-message-index="${msg.messageIndex}" style="padding:8px; background:rgba(0,255,255,0.05); margin:4px 0; border-radius:16px; cursor:pointer;"><div style="display:inline-block; width:36px;">💬</div> ${msg.chatName}: ${msg.messageText.substring(0,50)}</div>`; }); html += `</div>`; }
+            if (!html) html = '<div class="empty-state">😔 Ничего не найдено</div>';
+            resultsDiv.innerHTML = html;
+            
+            resultsDiv.querySelectorAll('.search-result-item[data-type="chat"], .search-result-item[data-type="group"], .search-result-item[data-type="channel"]').forEach(el => {
+                el.onclick = () => { const chatId = el.dataset.id; const chat = allChats.find(c => c.id === chatId); if(chat){ currentChat = chatId; currentChatName = chat.name; document.getElementById('chatTitle').innerHTML = `<span>${currentChatName}</span>`; loadMessages(); socket.emit('join', currentChat); socket.emit('markRead', { chatId: currentChat, user: currentUser }); unreadData[currentChat] = 0; renderLeftPanelContent(); if(window.innerWidth <= 768) document.getElementById('contentPanel').classList.remove('open'); modalDiv.remove(); } };
+            });
+            resultsDiv.querySelectorAll('.search-result-item[data-type="user"]').forEach(el => { el.onclick = () => { modalDiv.remove(); window.showUserProfile(el.dataset.login); }; });
+            resultsDiv.querySelectorAll('.search-result-item[data-type="message"]').forEach(el => { el.onclick = () => { const chatId = el.dataset.chatId; const msgIdx = parseInt(el.dataset.messageIndex); const chat = allChats.find(c => c.id === chatId); if(chat){ currentChat = chatId; currentChatName = chat.name; document.getElementById('chatTitle').innerHTML = `<span>${currentChatName}</span>`; loadMessages(); socket.emit('join', currentChat); setTimeout(() => { const msgs = document.querySelectorAll('.message'); if(msgs[msgIdx]){ msgs[msgIdx].classList.add('highlight'); msgs[msgIdx].scrollIntoView(); setTimeout(() => msgs[msgIdx]?.classList.remove('highlight'), 3000); } }, 200); if(window.innerWidth <= 768) document.getElementById('contentPanel').classList.remove('open'); modalDiv.remove(); } }; });
+        };
+        
+        searchInput.oninput = performSearch;
+        modalDiv.querySelector('#closeGlobalSearch').onclick = () => modalDiv.remove();
+        searchInput.focus();
+        performSearch();
+    }
+    
+    // ========== ЗАПУСК МЕССЕНДЖЕРА ==========
     async function startMessenger() {
         await loadAllData();
         
@@ -2407,8 +2479,11 @@
             if (currentChat === `favorites_${currentUser}`) return;
             if (!messagesData[msg.chatId]) messagesData[msg.chatId] = [];
             messagesData[msg.chatId].push(msg);
-            if (currentChat === msg.chatId) renderMessages();
-            loadAllData();
+            if (currentChat === msg.chatId) {
+                appendMessage(msg, true);
+            }
+            dataCache.lastUpdate = 0;
+            loadAllData(true);
             const isChatMuted = mutedChats[msg.chatId];
             if (!isChatMuted && msg.from !== currentUser) {
                 showToast(`📩 Новое сообщение от ${msg.from}`);
@@ -2436,18 +2511,20 @@
         socket.on('friendRequest', ({ from, to }) => {
             if (to === currentUser) {
                 showToast(`📨 Пользователь ${from} хочет добавить вас в друзья!`);
-                loadAllData();
+                dataCache.lastUpdate = 0;
+                loadAllData(true);
             }
         });
         
         socket.on('groupRequest', ({ groupId, fromUser, toUser }) => {
             if (toUser === currentUser) {
                 showToast(`📨 Пользователь ${fromUser} хочет вступить в группу!`);
-                loadAllData();
+                dataCache.lastUpdate = 0;
+                loadAllData(true);
             }
         });
         
-        socket.on('updateUnread', () => { loadAllData(); });
+        socket.on('updateUnread', () => { loadAllData(true); });
         socket.on('error', (msg) => { showToast(`❌ ${msg}`, true); });
         socket.on('disconnect', () => {
             showToast('⚠️ Потеря соединения, переподключение...', true);
@@ -2565,11 +2642,12 @@
             socket.emit('markRead', { chatId: currentChat, user: currentUser });
         }
         
+        // Пинг онлайн статуса раз в минуту (вместо 30 сек)
         setInterval(() => {
             if (socket && currentUser && socket.connected) {
                 socket.emit('userOnline', currentUser);
             }
-        }, 30000);
+        }, 60000);
     }
     
     // ========== ЗАПУСК ПРИЛОЖЕНИЯ ==========
